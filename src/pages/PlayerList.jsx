@@ -133,7 +133,7 @@ export default function PlayerList() {
                 {/* Avatar and Name */}
                 <Box display="flex" flexDirection="column" alignItems="center" mb={2}>
                   <Avatar
-                    src={player.photo}
+                    src={player.photo || undefined}
                     alt={player.name}
                     sx={{
                       width: 80,
@@ -143,8 +143,13 @@ export default function PlayerList() {
                       fontWeight: 700,
                       mb: 1.5,
                     }}
+                    imgProps={{
+                      onError: (e) => {
+                        e.target.style.display = 'none';
+                      },
+                    }}
                   >
-                    {!player.photo && player.name.charAt(0)}
+                    {player.name?.charAt(0).toUpperCase()}
                   </Avatar>
                   <Typography 
                     variant="h6" 

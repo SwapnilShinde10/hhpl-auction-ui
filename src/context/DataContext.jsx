@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { getAllPlayers, deletePlayer as apiDeletePlayer, updatePlayer } from '../services/playerService';
+import { getAllTeams, deleteTeam as apiDeleteTeam } from '../services/teamService';
 
 const DataContext = createContext(null);
 
@@ -7,73 +9,72 @@ export function useData() {
 }
 
 export function DataProvider({ children }) {
-  const [teams, setTeams] = useState([
-    { id: 1, name: 'Mumbai Warriors', logo: 'MW', remainingPoints: 8500000, squadSize: 11 },
-    { id: 2, name: 'Delhi Kings', logo: 'DK', remainingPoints: 7200000, squadSize: 10 },
-    { id: 3, name: 'Bangalore Strikers', logo: 'BS', remainingPoints: 6800000, squadSize: 9 },
-    { id: 4, name: 'Kolkata Knights', logo: 'KK', remainingPoints: 7900000, squadSize: 11 },
-    { id: 5, name: 'Chennai Titans', logo: 'CT', remainingPoints: 7500000, squadSize: 10 },
-    { id: 6, name: 'Rajasthan Royals', logo: 'RR', remainingPoints: 6500000, squadSize: 8 },
-  ]);
+  const [teams, setTeams] = useState([]);
+  const [players, setPlayers] = useState([]);
+  const [matches, setMatches] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const [players, setPlayers] = useState([
-    { id: 1, name: 'Virat Kohli', fullName: 'Virat Kohli', dob: '1988-11-05', role: 'Batsman', status: 'Sold', team: 'Mumbai Warriors', points: 120, ageCategory: 'Above 18', flatWing: 'A Wing', flatNumber: '101' },
-    { id: 2, name: 'Rohit Sharma', fullName: 'Rohit Sharma', dob: '1987-04-30', role: 'Batsman', status: 'Available', team: '-', points: 0, ageCategory: 'Above 18', flatWing: 'B Wing', flatNumber: '203' },
-    { id: 3, name: 'Jasprit Bumrah', fullName: 'Jasprit Bumrah', dob: '1993-03-06', role: 'Bowler', status: 'Sold', team: 'Delhi Kings', points: 95, ageCategory: 'Above 18', flatWing: 'A Wing', flatNumber: '110' },
-    { id: 4, name: 'Swapnil Shinde', fullName: 'Swapnil Shinde', dob: '1993-03-06', role: 'Bowler', status: 'Sold', team: 'Delhi Kings', points: 95, ageCategory: 'Above 18', flatWing: 'A Wing', flatNumber: '110' },
-    { id: 5, name: 'Shubham Shinde', fullName: 'Shubham Shinde', dob: '1993-03-06', role: 'Bowler', status: 'Sold', team: 'Delhi Kings', points: 95, ageCategory: 'Above 18', flatWing: 'A Wing', flatNumber: '110' },
-    { id: 6, name: 'Umesh Murty', fullName: 'Jasprit Bumrah', dob: '1993-03-06', role: 'Bowler', status: 'Sold', team: 'Delhi Kings', points: 95, ageCategory: 'Above 18', flatWing: 'A Wing', flatNumber: '110' },
-    { id: 7, name: 'Jasprit Bumrah', fullName: 'Jasprit Bumrah', dob: '1993-03-06', role: 'Bowler', status: 'Sold', team: 'Delhi Kings', points: 95, ageCategory: 'Above 18', flatWing: 'A Wing', flatNumber: '110' },
-    { id: 8, name: 'Jasprit Bumrah', fullName: 'Jasprit Bumrah', dob: '1993-03-06', role: 'Bowler', status: 'Sold', team: 'Delhi Kings', points: 95, ageCategory: 'Above 18', flatWing: 'A Wing', flatNumber: '110' },
-    { id: 9, name: 'Jasprit Bumrah', fullName: 'Jasprit Bumrah', dob: '1993-03-06', role: 'Bowler', status: 'Sold', team: 'Delhi Kings', points: 95, ageCategory: 'Above 18', flatWing: 'A Wing', flatNumber: '110' },
-    { id: 10, name: 'Jasprit Bumrah', fullName: 'Jasprit Bumrah', dob: '1993-03-06', role: 'Bowler', status: 'Sold', team: 'Delhi Kings', points: 95, ageCategory: 'Above 18', flatWing: 'A Wing', flatNumber: '110' },
-    { id: 11, name: 'Jasprit Bumrah', fullName: 'Jasprit Bumrah', dob: '1993-03-06', role: 'Bowler', status: 'Sold', team: 'Delhi Kings', points: 95, ageCategory: 'Above 18', flatWing: 'A Wing', flatNumber: '110' }
+  // Fetch teams from API
+  const fetchTeams = async () => {
+    try {
+      const response = await getAllTeams();
+      const teamsData = response.data || response;
+      setTeams(teamsData);
+    } catch (err) {
+      console.error('Error fetching teams:', err);
+      setError(err.message);
+    }
+  };
 
-  ]);
+  // Fetch players from API
+  const fetchPlayers = async () => {
+    try {
+      const response = await getAllPlayers();
+      const playersData = response.data || response;
+      setPlayers(playersData);
+    } catch (err) {
+      console.error('Error fetching players:', err);
+      setError(err.message);
+    }
+  };
 
-  const [matches, setMatches] = useState([
-    {
-      id: 1,
-      matchNumber: 'MATCH 1',
-      group: 'GROUP A',
-      team1Id: 1,
-      team1Name: 'Mumbai Warriors',
-      team2Id: 2,
-      team2Name: 'Delhi Kings',
-      venue: 'Harshail Cricket Ground',
-      location: 'Mumbai',
-      date: '2026-02-20',
-      time: '13:30',
-      status: 'scheduled',
-      winner: null,
-      team1Score: '',
-      team2Score: '',
-    },
-    {
-      id: 2,
-      matchNumber: 'MATCH 2',
-      group: 'GROUP B',
-      team1Id: 3,
-      team1Name: 'Bangalore Strikers',
-      team2Id: 4,
-      team2Name: 'Kolkata Knights',
-      venue: 'Harshail Cricket Ground',
-      location: 'Bangalore',
-      date: '2026-02-23',
-      time: '13:30',
-      status: 'scheduled',
-      winner: null,
-      team1Score: '',
-      team2Score: '',
-    },
-  ]);
+  // Load initial data on mount
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        await Promise.all([fetchTeams(), fetchPlayers()]);
+      } catch (err) {
+        console.error('Error loading data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  function deletePlayer(id) {
-    setPlayers((p) => p.filter((pl) => pl.id !== id));
+    loadData();
+  }, []);
+
+  // Delete player
+  async function deletePlayer(id) {
+    try {
+      await apiDeletePlayer(id);
+      setPlayers((p) => p.filter((pl) => pl.id !== id));
+    } catch (err) {
+      console.error('Error deleting player:', err);
+      throw err;
+    }
   }
 
-  function deleteTeam(id) {
-    setTeams((t) => t.filter((team) => team.id !== id));
+  // Delete team
+  async function deleteTeam(id) {
+    try {
+      await apiDeleteTeam(id);
+      setTeams((t) => t.filter((team) => team.id !== id));
+    } catch (err) {
+      console.error('Error deleting team:', err);
+      throw err;
+    }
   }
 
   function deductPoints(teamId, points) {
@@ -110,6 +111,8 @@ export function DataProvider({ children }) {
     teams,
     players,
     matches,
+    loading,
+    error,
     deletePlayer,
     deleteTeam,
     deductPoints,
@@ -119,6 +122,8 @@ export function DataProvider({ children }) {
     setPlayers,
     setTeams,
     setMatches,
+    fetchTeams,
+    fetchPlayers,
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

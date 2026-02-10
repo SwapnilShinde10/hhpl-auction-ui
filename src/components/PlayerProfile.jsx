@@ -31,7 +31,7 @@ export default function PlayerProfile({ open, onClose, player }) {
         <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start', flexWrap: 'wrap' }}>
           <Box sx={{ flex: '0 0 260px', display: 'flex', justifyContent: 'center' }}>
             <Avatar
-              src={player.photo ? (typeof player.photo === 'string' ? player.photo : URL.createObjectURL(player.photo)) : ''}
+              src={player.photo || undefined}
               sx={{
                 width: 260,
                 height: 260,
@@ -41,7 +41,9 @@ export default function PlayerProfile({ open, onClose, player }) {
                 boxShadow: '0 12px 30px rgba(16,24,40,0.12)',
                 border: '6px solid #fff'
               }}
-            />
+            >
+              {!player.photo && (player.fullName || player.name)?.charAt(0).toUpperCase()}
+            </Avatar>
           </Box>
 
           <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>

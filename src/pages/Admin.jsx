@@ -1,10 +1,12 @@
 import * as React from 'react';
-import { Box, Tabs, Tab, Paper, Typography, Divider, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material';
+import { Box, Tabs, Tab, Paper, Typography, Divider, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Alert, CircularProgress } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import { useData } from '../context/DataContext';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import ImageIcon from '@mui/icons-material/Image';
 import PlayerProfile from '../components/PlayerProfile';
+import { fixBrokenPlayerPhotos } from '../utils/fixPlayerPhotos';
 
 export default function Admin() {
   const { players, deletePlayer, teams, deductPoints } = useData();
@@ -14,6 +16,8 @@ export default function Admin() {
   const [toDelete, setToDelete] = React.useState(null);
   const [profileOpen, setProfileOpen] = React.useState(false);
   const [selectedPlayer, setSelectedPlayer] = React.useState(null);
+  const [fixing, setFixing] = React.useState(false);
+  const [fixResult, setFixResult] = React.useState(null);
 
   const handleViewProfile = (player) => {
     setSelectedPlayer(player);
@@ -42,6 +46,20 @@ export default function Admin() {
     if (!raw || Number.isNaN(value) || value <= 0) return;
     deductPoints(teamId, value);
     setDeductValues((s) => ({ ...s, [teamId]: '' }));
+  };
+
+  const handleFixPhotos = async () => {
+    setFixing(true);
+    setFixResult(null);
+    try {
+      const results = await fixBrokenPlayerPhotos();
+      setFixResult({ success: true, results });
+      window.location.reload(); // Reload to fetch updated data
+    } catch (error) {
+      setFixResult({ success: false, error: error.message });
+    } finally {
+      setFixing(false);
+    }
   };
 
   const columns = [
@@ -75,7 +93,26 @@ export default function Admin() {
 
       {tab === 0 && (
         <Paper sx={{ p: 2 }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>All Players</Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h6">All Players</Typography>
+            <Button
+              variant="outlined"
+              startIcon={fixing ? <CircularProgress size={20} /> : <ImageIcon />}
+              onClick={handleFixPhotos}
+              disabled={fixing}
+            >
+              Fix Broken Photos
+            </Button>
+          </Box>
+          
+          {fixResult && (
+            <Alert severity={fixResult.success ? 'success' : 'error'} sx={{ mb: 2 }} onClose={() => setFixResult(null)}>
+              {fixResult.success 
+                ? `Successfully updated ${fixResult.results.length} player(s)` 
+                : `Error: ${fixResult.error}`}
+            </Alert>
+          )}
+          
           <div style={{ height: 480, width: '100%' }}>
             <DataGrid rows={players} columns={columns} pageSizeOptions={[5, 10]} disableRowSelectionOnClick />
           </div>

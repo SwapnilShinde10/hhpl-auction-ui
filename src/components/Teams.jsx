@@ -8,59 +8,29 @@ import {
   Grid,
   Divider,
   Paper,
+  CircularProgress,
 } from '@mui/material';
+import { useData } from '../context/DataContext';
 
 export default function Teams() {
-  // Sample teams data
-  const teams = [
-    {
-      id: 1,
-      name: 'Mumbai Warriors',
-      logo: 'MW',
-      remainingPoints: 8500000,
-      squadSize: 11,
-      color: 'linear-gradient(90deg, #ffa500, #ff6b00)',
-    },
-    {
-      id: 2,
-      name: 'Delhi Kings',
-      logo: 'DK',
-      remainingPoints: 7200000,
-      squadSize: 10,
-      color: 'linear-gradient(90deg, #1e88e5, #42a5f5)',
-    },
-    {
-      id: 3,
-      name: 'Bangalore Strikers',
-      logo: 'BS',
-      remainingPoints: 6800000,
-      squadSize: 9,
-      color: 'linear-gradient(90deg, #d32f2f, #f44336)',
-    },
-    {
-      id: 4,
-      name: 'Kolkata Knights',
-      logo: 'KK',
-      remainingPoints: 7900000,
-      squadSize: 11,
-      color: 'linear-gradient(90deg, #7b1fa2, #ba68c8)',
-    },
-    {
-      id: 5,
-      name: 'Chennai Titans',
-      logo: 'CT',
-      remainingPoints: 7500000,
-      squadSize: 10,
-      color: 'linear-gradient(90deg, #f57c00, #ff9800)',
-    },
-    {
-      id: 6,
-      name: 'Rajasthan Royals',
-      logo: 'RR',
-      remainingPoints: 6500000,
-      squadSize: 8,
-      color: 'linear-gradient(90deg, #c41c3b, #e91670)',
-    },
+  const { teams, loading } = useData();
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  // Default colors for teams if not provided
+  const defaultColors = [
+    'linear-gradient(90deg, #ffa500, #ff6b00)',
+    'linear-gradient(90deg, #1e88e5, #42a5f5)',
+    'linear-gradient(90deg, #d32f2f, #f44336)',
+    'linear-gradient(90deg, #7b1fa2, #ba68c8)',
+    'linear-gradient(90deg, #f57c00, #ff9800)',
+    'linear-gradient(90deg, #c41c3b, #e91670)',
   ];
 
   return (

@@ -15,9 +15,14 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
+import Alert from '@mui/material/Alert';
+import CircularProgress from '@mui/material/CircularProgress';
 import { styled } from '@mui/material/styles';
 import { Link as RouterLink } from 'react-router-dom';
 import PlayerRegistration from '../components/PlayerRegistration';
+import { registerTeam } from '../services/teamService';
+import { uploadTeamLogo } from '../services/uploadService';
+import { useData } from '../context/DataContext';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -48,19 +53,72 @@ const PageContainer = styled(Stack)(({ theme }) => ({
 }));
 
 export default function TeamRegistration() {
+  const { fetchTeams } = useData();
   const [logo, setLogo] = React.useState(null);
   const [tab, setTab] = React.useState(0);
+  const [loading, setLoading] = React.useState(false);
+  const [success, setSuccess] = React.useState('');
+  const [error, setError] = React.useState('');
+  const [teamName, setTeamName] = React.useState('');
+  const [ownerName, setOwnerName] = React.useState('');
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [budget, setBudget] = React.useState('100000');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const data = new FormData(e.currentTarget);
-    console.log({
-      teamName: data.get('teamName'),
-      ownerName: data.get('ownerName'),
-      email: data.get('email'),
-      password: data.get('password'),
-      logo,
-    });
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      // Upload logo first if provided
+      let logoURL = '';
+      if (logo) {
+        try {
+          setSuccess('Uploading logo...');
+          logoURL = await uploadTeamLogo(logo);
+          console.log('Logo uploaded successfully:', logoURL);
+        } catch (uploadError) {
+          console.error('Logo upload error:', uploadError);
+          setError('Failed to upload logo. Please try again.');
+          setLoading(false);
+          return;
+        }
+      }
+
+      const teamData = {
+        name: teamName,
+        ownerName: ownerName,
+        email: email,
+        password: password,
+        budget: parseInt(budget),
+        ...(logoURL && { logo: logoURL })
+      };
+
+      const response = await registerTeam(teamData);
+      console.log('Team registered:', response);
+      
+      setSuccess('Team registered successfully!');
+      
+      // Refresh teams list
+      await fetchTeams();
+      
+      // Reset form
+      setTeamName('');
+      setOwnerName('');
+      setEmail('');
+      setPassword('');
+      setBudget('100000');
+      setLogo(null);
+      
+      setTimeout(() => setSuccess(''), 5000);
+    } catch (err) {
+      console.error('Error registering team:', err);
+      setError(err.message || 'Failed to register team. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleTabChange = (e, value) => setTab(value);
@@ -111,6 +169,9 @@ export default function TeamRegistration() {
 
           {tab === 0 && (
             <Box sx={{ p: 2 }}>
+              {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
+              {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+              
               <Box textAlign="center" sx={{ mb: 1 }}>
                 <Typography variant="h4" fontWeight={700} gutterBottom>
                   Owner Registration
@@ -139,26 +200,38 @@ export default function TeamRegistration() {
 
                 <FormControl>
                   <FormLabel>Team Name</FormLabel>
-                  <TextField name="teamName" required fullWidth placeholder="Mumbai Warriors" />
+                  <TextField value={teamName} onChange={(e) => setTeamName(e.target.value)} name="teamName" required fullWidth placeholder="Mumbai Warriors" />
                 </FormControl>
 
                 <FormControl>
                   <FormLabel>Owner Name</FormLabel>
-                  <TextField name="ownerName" required fullWidth placeholder="Swapnil Shinde" />
+                  <TextField value={ownerName} onChange={(e) => setOwnerName(e.target.value)} name="ownerName" required fullWidth placeholder="Swapnil Shinde" />
                 </FormControl>
 
                 <FormControl>
                   <FormLabel>Email</FormLabel>
-                  <TextField name="email" type="email" required fullWidth />
+                  <TextField value={email} onChange={(e) => setEmail(e.target.value)} name="email" type="email" required fullWidth />
                 </FormControl>
 
                 <FormControl>
                   <FormLabel>Password</FormLabel>
-                  <TextField name="password" type="password" required fullWidth />
+                  <TextField value={password} onChange={(e) => setPassword(e.target.value)} name="password" type="password" required fullWidth />
                 </FormControl>
 
-                <Button type="submit" fullWidth size="large" variant="contained" sx={{ mt: 1, py: 1.2, borderRadius: 2, background: 'linear-gradient(90deg, #1976d2, #42a5f5)' }}>
-                  Register Team
+                <FormControl>
+                  <FormLabel>Team Budget (₹)</FormLabel>
+                  <TextField value={budget} onChange={(e) => setBudget(e.target.value)} name="budget" type="number" required fullWidth placeholder="100000" />
+                </FormControl>
+
+                <Button 
+                  type="submit" 
+                  fullWidth 
+                  size="large" 
+                  variant="contained" 
+                  disabled={loading}
+                  sx={{ mt: 1, py: 1.2, borderRadius: 2, background: 'linear-gradient(90deg, #1976d2, #42a5f5)' }}
+                >
+                  {loading ? <CircularProgress size={24} color="inherit" /> : 'Register Team'}
                 </Button>
               </Box>
 

@@ -23,6 +23,7 @@ export default function AuctionPlayerProfile({ open, onClose, player }) {
   const [selectedTeam, setSelectedTeam] = React.useState('');
   const [showConfetti, setShowConfetti] = React.useState(false);
   const [showSoldStamp, setShowSoldStamp] = React.useState(false);
+  const [imageError, setImageError] = React.useState(false);
 
   React.useEffect(() => {
     if (player) {
@@ -30,6 +31,7 @@ export default function AuctionPlayerProfile({ open, onClose, player }) {
       setPrice('');
       setSelectedTeam('');
       setShowSoldStamp(false);
+      setImageError(false); // Reset image error state
     }
   }, [player]);
 
@@ -117,7 +119,7 @@ export default function AuctionPlayerProfile({ open, onClose, player }) {
                 }}
               >
                 <Avatar
-                  src={player.photo}
+                  src={imageError ? undefined : player.photo}
                   alt={player.name}
                   sx={{
                     width: '100%',
@@ -127,8 +129,11 @@ export default function AuctionPlayerProfile({ open, onClose, player }) {
                     fontSize: 80,
                   }}
                   variant="rounded"
+                  imgProps={{
+                    onError: () => setImageError(true),
+                  }}
                 >
-                  {!player.photo && player.name.charAt(0)}
+                  {(!player.photo || imageError) && player.name?.charAt(0).toUpperCase()}
                 </Avatar>
 
                 {/* SOLD Stamp Overlay */}
