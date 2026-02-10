@@ -31,21 +31,94 @@ export function DataProvider({ children }) {
 
   ]);
 
+  const [matches, setMatches] = useState([
+    {
+      id: 1,
+      matchNumber: 'MATCH 1',
+      group: 'GROUP A',
+      team1Id: 1,
+      team1Name: 'Mumbai Warriors',
+      team2Id: 2,
+      team2Name: 'Delhi Kings',
+      venue: 'Harshail Cricket Ground',
+      location: 'Mumbai',
+      date: '2026-02-20',
+      time: '13:30',
+      status: 'scheduled',
+      winner: null,
+      team1Score: '',
+      team2Score: '',
+    },
+    {
+      id: 2,
+      matchNumber: 'MATCH 2',
+      group: 'GROUP B',
+      team1Id: 3,
+      team1Name: 'Bangalore Strikers',
+      team2Id: 4,
+      team2Name: 'Kolkata Knights',
+      venue: 'Harshail Cricket Ground',
+      location: 'Bangalore',
+      date: '2026-02-23',
+      time: '13:30',
+      status: 'scheduled',
+      winner: null,
+      team1Score: '',
+      team2Score: '',
+    },
+  ]);
+
   function deletePlayer(id) {
     setPlayers((p) => p.filter((pl) => pl.id !== id));
+  }
+
+  function deleteTeam(id) {
+    setTeams((t) => t.filter((team) => team.id !== id));
   }
 
   function deductPoints(teamId, points) {
     setTeams((t) => t.map((team) => (team.id === teamId ? { ...team, remainingPoints: Math.max(0, team.remainingPoints - points) } : team)));
   }
 
+  function addMatch(match) {
+    const newMatch = {
+      ...match,
+      id: matches.length > 0 ? Math.max(...matches.map(m => m.id)) + 1 : 1,
+      status: 'scheduled',
+      winner: null,
+      team1Score: '',
+      team2Score: '',
+    };
+    setMatches((m) => [...m, newMatch]);
+  }
+
+  function updateMatchResult(matchId, winnerId, team1Score, team2Score) {
+    setMatches((m) =>
+      m.map((match) =>
+        match.id === matchId
+          ? { ...match, status: 'completed', winner: winnerId, team1Score, team2Score }
+          : match
+      )
+    );
+  }
+
+  function deleteMatch(matchId) {
+    setMatches((m) => m.filter((match) => match.id !== matchId));
+  }
+
   const value = {
     teams,
     players,
+    matches,
     deletePlayer,
+    deleteTeam,
     deductPoints,
+    addMatch,
+    updateMatchResult,
+    deleteMatch,
     setPlayers,
     setTeams,
+    setMatches,
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

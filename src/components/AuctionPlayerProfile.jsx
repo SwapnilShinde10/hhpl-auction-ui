@@ -80,7 +80,7 @@ export default function AuctionPlayerProfile({ open, onClose, player }) {
         fullWidth
         PaperProps={{
           sx: {
-            background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             borderRadius: 3,
             p: 0,
           },
@@ -88,7 +88,7 @@ export default function AuctionPlayerProfile({ open, onClose, player }) {
       >
         <Box
           sx={{
-            background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             border: '4px solid',
             borderImageSlice: 1,
             borderImageSource: 'linear-gradient(45deg, #e74c3c, #3498db)',
