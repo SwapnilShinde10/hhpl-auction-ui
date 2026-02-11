@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, Paper, Typography, Button, TextField, IconButton, Tabs, Tab, CircularProgress } from '@mui/material';
+import { Box, Paper, Typography, Button, TextField, IconButton, Tabs, Tab, CircularProgress, Chip } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -58,6 +58,21 @@ export default function RegisteredPlayers() {
     { field: 'name', headerName: 'Name', flex: 1, minWidth: 150 },
     { field: 'role', headerName: 'Role', width: 130 },
     { 
+      field: 'status', 
+      headerName: 'Status', 
+      width: 120,
+      renderCell: (params) => {
+        const status = params.row.status || 'registered';
+        const statusConfig = {
+          sold: { label: 'Sold', color: 'success' },
+          available: { label: 'Available', color: 'warning' },
+          registered: { label: 'Registered', color: 'default' }
+        };
+        const config = statusConfig[status] || statusConfig.registered;
+        return <Chip label={config.label} color={config.color} size="small" />;
+      }
+    },
+    { 
       field: 'team', 
       headerName: 'Team', 
       flex: 1, 
@@ -75,7 +90,7 @@ export default function RegisteredPlayers() {
       width: 120,
       valueGetter: (value, row) => {
         if (!row || !row.soldPrice) return '₹0';
-        return `₹${(row.soldPrice / 1000000).toFixed(2)}M`;
+        return `₹${row.soldPrice.toLocaleString('en-IN')}`;
       }
     },
     {

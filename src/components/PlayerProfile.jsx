@@ -27,7 +27,7 @@ export default function PlayerProfile({ open, onClose, player }) {
   // Get sold price display
   const getSoldPrice = () => {
     if (!player.soldPrice || player.soldPrice === 0) return '₹0';
-    return `₹${(player.soldPrice / 1000000).toFixed(2)}M`;
+    return `₹${player.soldPrice.toLocaleString('en-IN')}`;
   };
 
   return (

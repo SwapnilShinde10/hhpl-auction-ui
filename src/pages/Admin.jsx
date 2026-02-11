@@ -126,7 +126,7 @@ export default function Admin() {
             {teams.map((team) => (
               <Paper key={team.id} sx={{ p: 2, width: 260 }}>
                 <Typography variant="h6">{team.name}</Typography>
-                <Typography variant="body2" color="text.secondary">Remaining Points: ₹{((team.remainingBudget || 0)/1000000).toFixed(2)}M</Typography>
+                <Typography variant="body2" color="text.secondary">Remaining Points: ₹{(team.remainingBudget || 0).toLocaleString('en-IN')}</Typography>
                 <Typography variant="body2" color="text.secondary">Squad: {team.players?.length || 0}</Typography>
 
                 <Box sx={{ mt: 1, display: 'flex', gap: 1, alignItems: 'center' }}>

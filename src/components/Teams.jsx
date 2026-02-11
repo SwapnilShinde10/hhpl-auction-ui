@@ -125,7 +125,7 @@ export default function Teams() {
                         mt: 0.5,
                       }}
                     >
-                      ₹{((team.remainingBudget || 0) / 1000000).toFixed(2)}M
+                      ₹{(team.remainingBudget || 0).toLocaleString('en-IN')}
                     </Typography>
                   </Box>
 

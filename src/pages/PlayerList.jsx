@@ -104,8 +104,9 @@ export default function PlayerList() {
               onChange={(e) => setStatusFilter(e.target.value)}
             >
               <MenuItem value="All">All</MenuItem>
-              <MenuItem value="Sold">Sold</MenuItem>
-              <MenuItem value="Available">Available</MenuItem>
+              <MenuItem value="sold">Sold</MenuItem>
+              <MenuItem value="available">Available</MenuItem>
+              <MenuItem value="registered">Registered</MenuItem>
             </Select>
           </FormControl>
 
@@ -207,10 +208,10 @@ export default function PlayerList() {
                       Status:
                     </Typography>
                     <Chip
-                      label={player.status}
+                      label={player.status === 'sold' ? 'Sold' : player.status === 'available' ? 'Available' : 'Registered'}
                       size="small"
                       sx={{
-                        bgcolor: player.status === 'Sold' ? '#4caf50' : '#ff9800',
+                        bgcolor: player.status === 'sold' ? '#4caf50' : player.status === 'available' ? '#ff9800' : '#9e9e9e',
                         color: '#fff',
                         fontWeight: 600,
                       }}
@@ -237,7 +238,7 @@ export default function PlayerList() {
                       Sold Price:
                     </Typography>
                     <Typography variant="body2" fontWeight={700} fontSize={16}>
-                      {player.soldPrice ? `₹${(player.soldPrice / 1000000).toFixed(2)}M` : '₹0'}
+                      {player.soldPrice ? `₹${player.soldPrice.toLocaleString('en-IN')}` : '₹0'}
                     </Typography>
                   </Box>
                 </Box>

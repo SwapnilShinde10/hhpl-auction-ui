@@ -108,7 +108,7 @@ export default function TeamDashboard() {
                   mt: 0.5,
                 }}
               >
-                ₹{((teamData.remainingBudget || 0) / 1000000).toFixed(2)}M
+                ₹{(teamData.remainingBudget || 0).toLocaleString('en-IN')}
               </Typography>
             </Box>
 

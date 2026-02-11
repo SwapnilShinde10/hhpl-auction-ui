@@ -71,7 +71,7 @@ export default function AuctionPlayerProfile({ open, onClose, player }) {
         const auctionPrice = Number(price);
 
         if (remainingBudget < auctionPrice) {
-          setError(`Insufficient budget! Team has ₹${(remainingBudget / 1000000).toFixed(2)}M remaining, but player costs ₹${(auctionPrice / 1000000).toFixed(2)}M`);
+          setError(`Insufficient budget! Team has ₹${remainingBudget.toLocaleString('en-IN')} remaining, but player costs ₹${auctionPrice.toLocaleString('en-IN')}`);
           setLoading(false);
           return;
         }
@@ -269,7 +269,7 @@ export default function AuctionPlayerProfile({ open, onClose, player }) {
                 <Box sx={{ borderBottom: '1px solid rgba(255,255,255,0.2)', pb: 1 }}>
                   <Typography variant="caption" sx={{ color: '#fbbf24', fontWeight: 700 }}>Sold Price:</Typography>
                   <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                    {player.soldPrice ? `₹${(player.soldPrice / 1000000).toFixed(2)}M` : '₹0'}
+                    {player.soldPrice ? `₹${player.soldPrice.toLocaleString('en-IN')}` : '₹0'}
                   </Typography>
                 </Box>
               </Box>
@@ -379,7 +379,7 @@ export default function AuctionPlayerProfile({ open, onClose, player }) {
                       >
                         {teams.map((team) => (
                           <MenuItem key={team.id} value={team.id}>
-                            {team.name} - ₹{((team.remainingBudget || team.totalBudget || 0) / 1000000).toFixed(2)}M remaining
+                            {team.name} - ₹{((team.remainingBudget || team.totalBudget || 0)).toLocaleString('en-IN')} remaining
                           </MenuItem>
                         ))}
                       </Select>

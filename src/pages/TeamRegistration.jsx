@@ -63,7 +63,6 @@ export default function TeamRegistration() {
   const [ownerName, setOwnerName] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
-  const [budget, setBudget] = React.useState('100000');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -92,7 +91,7 @@ export default function TeamRegistration() {
         ownerName: ownerName,
         email: email,
         password: password,
-        budget: parseInt(budget),
+        budget: 10000,
         ...(logoURL && { logo: logoURL })
       };
 
@@ -109,7 +108,6 @@ export default function TeamRegistration() {
       setOwnerName('');
       setEmail('');
       setPassword('');
-      setBudget('100000');
       setLogo(null);
       
       setTimeout(() => setSuccess(''), 5000);
@@ -216,11 +214,6 @@ export default function TeamRegistration() {
                 <FormControl>
                   <FormLabel>Password</FormLabel>
                   <TextField value={password} onChange={(e) => setPassword(e.target.value)} name="password" type="password" required fullWidth />
-                </FormControl>
-
-                <FormControl>
-                  <FormLabel>Team Budget (₹)</FormLabel>
-                  <TextField value={budget} onChange={(e) => setBudget(e.target.value)} name="budget" type="number" required fullWidth placeholder="100000" />
                 </FormControl>
 
                 <Button 
