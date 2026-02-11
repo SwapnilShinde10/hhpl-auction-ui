@@ -60,27 +60,27 @@ export default function PlayerProfile({ open, onClose, player }) {
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1.5 }}>
               <Box>
                 <Typography variant="caption" color="text.secondary">Date of Birth</Typography>
-                <Typography fontWeight={700}>{player.dob ? new Date(player.dob).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A'}</Typography>
+                <Typography fontWeight={700}>{player.dateOfBirth ? new Date(player.dateOfBirth).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A'}</Typography>
               </Box>
 
               <Box>
-                <Typography variant="caption" color="text.secondary">Age Category</Typography>
-                <Typography fontWeight={700}>{player.ageCategory}</Typography>
+                <Typography variant="caption" color="text.secondary">Age</Typography>
+                <Typography fontWeight={700}>{player.age || 'N/A'}</Typography>
               </Box>
 
               <Box>
-                <Typography variant="caption" color="text.secondary">Wing</Typography>
-                <Typography fontWeight={700}>{player.flatWing}</Typography>
+                <Typography variant="caption" color="text.secondary">Address</Typography>
+                <Typography fontWeight={700}>{player.address || 'N/A'}</Typography>
               </Box>
 
               <Box>
-                <Typography variant="caption" color="text.secondary">Flat Number</Typography>
-                <Typography fontWeight={700}>{player.flatNumber}</Typography>
+                <Typography variant="caption" color="text.secondary">Contact</Typography>
+                <Typography fontWeight={700}>{player.contactNumber || 'N/A'}</Typography>
               </Box>
 
               <Box>
                 <Typography variant="caption" color="text.secondary">Team</Typography>
-                <Typography fontWeight={700}>{player.team}</Typography>
+                <Typography fontWeight={700}>{player.soldTo || player.team || 'N/A'}</Typography>
               </Box>
             </Box>
           </Box>

@@ -19,6 +19,7 @@ import {
   DialogActions,
   IconButton,
   Divider,
+  CircularProgress,
 } from '@mui/material';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -35,7 +36,9 @@ export default function DeclareResults() {
     team1Score: '',
     team2Score: '',
   });
+  const [loading, setLoading] = React.useState(false);
   const [successMessage, setSuccessMessage] = React.useState('');
+  const [errorMessage, setErrorMessage] = React.useState('');
 
   const handleOpenResultDialog = (match) => {
     setSelectedMatch(match);
@@ -51,27 +54,38 @@ export default function DeclareResults() {
     setResultDialog(false);
     setSelectedMatch(null);
     setResultData({ winner: '', team1Score: '', team2Score: '' });
+    setErrorMessage('');
   };
 
-  const handleDeclareResult = () => {
+  const handleDeclareResult = async () => {
     if (!resultData.winner) {
-      alert('Please select a winner!');
+      setErrorMessage('Please select a winner!');
       return;
     }
 
-    updateMatchResult(
-      selectedMatch.id,
-      resultData.winner,
-      resultData.team1Score,
-      resultData.team2Score
-    );
+    setLoading(true);
+    setErrorMessage('');
 
-    setSuccessMessage(`Result declared for ${selectedMatch.matchNumber}!`);
-    handleCloseResultDialog();
+    try {
+      await updateMatchResult(
+        selectedMatch.id,
+        resultData.winner,
+        resultData.team1Score,
+        resultData.team2Score
+      );
 
-    setTimeout(() => {
-      setSuccessMessage('');
-    }, 3000);
+      setSuccessMessage(`Result declared for ${selectedMatch.matchNumber}! 🎉`);
+      handleCloseResultDialog();
+
+      setTimeout(() => {
+        setSuccessMessage('');
+      }, 5000);
+    } catch (error) {
+      console.error('Error declaring result:', error);
+      setErrorMessage(error.message || 'Failed to declare result. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDeleteMatch = (matchId) => {
@@ -152,13 +166,13 @@ export default function DeclareResults() {
                       }}
                     >
                       <Typography variant="body1" fontWeight={700} sx={{ flex: 1, textAlign: 'center' }}>
-                        {match.team1Name}
+                        {match.team1?.name || match.team1Name}
                       </Typography>
                       <Typography variant="h6" fontWeight={900} color="primary" sx={{ px: 2 }}>
                         VS
                       </Typography>
                       <Typography variant="body1" fontWeight={700} sx={{ flex: 1, textAlign: 'center' }}>
-                        {match.team2Name}
+                        {match.team2?.name || match.team2Name}
                       </Typography>
                     </Box>
 
@@ -255,15 +269,15 @@ export default function DeclareResults() {
                           alignItems: 'center',
                           py: 1,
                           px: 2,
-                          bgcolor: match.winner === match.team1Id ? '#e8f5e9' : '#f5f5f5',
+                          bgcolor: match.winner === (match.team1?.id || match.team1Id) ? '#e8f5e9' : '#f5f5f5',
                           borderRadius: 1,
                           mb: 1,
-                          border: match.winner === match.team1Id ? '2px solid #4caf50' : '1px solid #e0e0e0',
+                          border: match.winner === (match.team1?.id || match.team1Id) ? '2px solid #4caf50' : '1px solid #e0e0e0',
                         }}
                       >
                         <Typography variant="body1" fontWeight={700}>
-                          {match.team1Name}
-                          {match.winner === match.team1Id && (
+                          {match.team1?.name || match.team1Name}
+                          {match.winner === (match.team1?.id || match.team1Id) && (
                             <EmojiEventsIcon sx={{ ml: 1, fontSize: 18, color: '#ffd700' }} />
                           )}
                         </Typography>
@@ -279,14 +293,14 @@ export default function DeclareResults() {
                           alignItems: 'center',
                           py: 1,
                           px: 2,
-                          bgcolor: match.winner === match.team2Id ? '#e8f5e9' : '#f5f5f5',
+                          bgcolor: match.winner === (match.team2?.id || match.team2Id) ? '#e8f5e9' : '#f5f5f5',
                           borderRadius: 1,
-                          border: match.winner === match.team2Id ? '2px solid #4caf50' : '1px solid #e0e0e0',
+                          border: match.winner === (match.team2?.id || match.team2Id) ? '2px solid #4caf50' : '1px solid #e0e0e0',
                         }}
                       >
                         <Typography variant="body1" fontWeight={700}>
-                          {match.team2Name}
-                          {match.winner === match.team2Id && (
+                          {match.team2?.name || match.team2Name}
+                          {match.winner === (match.team2?.id || match.team2Id) && (
                             <EmojiEventsIcon sx={{ ml: 1, fontSize: 18, color: '#ffd700' }} />
                           )}
                         </Typography>
@@ -322,6 +336,12 @@ export default function DeclareResults() {
                 {selectedMatch.matchNumber} - {selectedMatch.group}
               </Typography>
 
+              {errorMessage && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {errorMessage}
+                </Alert>
+              )}
+
               <Box
                 sx={{
                   display: 'flex',
@@ -333,13 +353,13 @@ export default function DeclareResults() {
                 }}
               >
                 <Typography variant="h6" fontWeight={700}>
-                  {selectedMatch.team1Name}
+                  {selectedMatch.team1?.name || selectedMatch.team1Name}
                 </Typography>
                 <Typography variant="h6" fontWeight={900} color="primary">
                   VS
                 </Typography>
                 <Typography variant="h6" fontWeight={700}>
-                  {selectedMatch.team2Name}
+                  {selectedMatch.team2?.name || selectedMatch.team2Name}
                 </Typography>
               </Box>
 
@@ -347,7 +367,7 @@ export default function DeclareResults() {
                 <Grid item xs={6}>
                   <TextField
                     fullWidth
-                    label={`${selectedMatch.team1Name} Score`}
+                    label={`${selectedMatch.team1?.name || selectedMatch.team1Name} Score`}
                     placeholder="120/5"
                     value={resultData.team1Score}
                     onChange={(e) => setResultData({ ...resultData, team1Score: e.target.value })}
@@ -356,7 +376,7 @@ export default function DeclareResults() {
                 <Grid item xs={6}>
                   <TextField
                     fullWidth
-                    label={`${selectedMatch.team2Name} Score`}
+                    label={`${selectedMatch.team2?.name || selectedMatch.team2Name} Score`}
                     placeholder="115/8"
                     value={resultData.team2Score}
                     onChange={(e) => setResultData({ ...resultData, team2Score: e.target.value })}
@@ -370,8 +390,12 @@ export default function DeclareResults() {
                       onChange={(e) => setResultData({ ...resultData, winner: e.target.value })}
                       label="Match Winner"
                     >
-                      <MenuItem value={selectedMatch.team1Id}>{selectedMatch.team1Name}</MenuItem>
-                      <MenuItem value={selectedMatch.team2Id}>{selectedMatch.team2Name}</MenuItem>
+                      <MenuItem value={selectedMatch.team1?.id || selectedMatch.team1Id}>
+                        {selectedMatch.team1?.name || selectedMatch.team1Name}
+                      </MenuItem>
+                      <MenuItem value={selectedMatch.team2?.id || selectedMatch.team2Id}>
+                        {selectedMatch.team2?.name || selectedMatch.team2Name}
+                      </MenuItem>
                     </Select>
                   </FormControl>
                 </Grid>
@@ -380,19 +404,20 @@ export default function DeclareResults() {
           )}
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
-          <Button onClick={handleCloseResultDialog} variant="outlined">
+          <Button onClick={handleCloseResultDialog} variant="outlined" disabled={loading}>
             Cancel
           </Button>
           <Button
             onClick={handleDeclareResult}
             variant="contained"
-            startIcon={<EmojiEventsIcon />}
+            disabled={loading}
+            startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <EmojiEventsIcon />}
             sx={{
               background: 'linear-gradient(90deg, #4caf50, #66bb6a)',
               fontWeight: 700,
             }}
           >
-            Declare Winner
+            {loading ? 'Declaring...' : 'Declare Winner'}
           </Button>
         </DialogActions>
       </Dialog>

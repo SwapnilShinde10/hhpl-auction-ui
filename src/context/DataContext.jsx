@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getAllPlayers, deletePlayer as apiDeletePlayer, updatePlayer } from '../services/playerService';
 import { getAllTeams, deleteTeam as apiDeleteTeam } from '../services/teamService';
+import { getAllMatches, deleteMatch as apiDeleteMatch, updateMatchResult as apiUpdateMatchResult } from '../services/matchService';
 
 const DataContext = createContext(null);
 
@@ -39,12 +40,24 @@ export function DataProvider({ children }) {
     }
   };
 
+  // Fetch matches from API
+  const fetchMatches = async () => {
+    try {
+      const response = await getAllMatches();
+      const matchesData = response.data || response;
+      setMatches(matchesData);
+    } catch (err) {
+      console.error('Error fetching matches:', err);
+      setError(err.message);
+    }
+  };
+
   // Load initial data on mount
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
       try {
-        await Promise.all([fetchTeams(), fetchPlayers()]);
+        await Promise.all([fetchTeams(), fetchPlayers(), fetchMatches()]);
       } catch (err) {
         console.error('Error loading data:', err);
       } finally {
@@ -78,7 +91,7 @@ export function DataProvider({ children }) {
   }
 
   function deductPoints(teamId, points) {
-    setTeams((t) => t.map((team) => (team.id === teamId ? { ...team, remainingPoints: Math.max(0, team.remainingPoints - points) } : team)));
+    setTeams((t) => t.map((team) => (team.id === teamId ? { ...team, remainingBudget: Math.max(0, team.remainingBudget - points) } : team)));
   }
 
   function addMatch(match) {
@@ -93,18 +106,29 @@ export function DataProvider({ children }) {
     setMatches((m) => [...m, newMatch]);
   }
 
-  function updateMatchResult(matchId, winnerId, team1Score, team2Score) {
-    setMatches((m) =>
-      m.map((match) =>
-        match.id === matchId
-          ? { ...match, status: 'completed', winner: winnerId, team1Score, team2Score }
-          : match
-      )
-    );
+  async function updateMatchResult(matchId, winnerId, team1Score, team2Score) {
+    try {
+      await apiUpdateMatchResult(matchId, {
+        winner: winnerId,
+        team1Score: team1Score,
+        team2Score: team2Score
+      });
+      // Refresh matches after update
+      await fetchMatches();
+    } catch (err) {
+      console.error('Error updating match result:', err);
+      throw err;
+    }
   }
 
-  function deleteMatch(matchId) {
-    setMatches((m) => m.filter((match) => match.id !== matchId));
+  async function deleteMatch(matchId) {
+    try {
+      await apiDeleteMatch(matchId);
+      setMatches((m) => m.filter((match) => match.id !== matchId));
+    } catch (err) {
+      console.error('Error deleting match:', err);
+      throw err;
+    }
   }
 
   const value = {
@@ -124,6 +148,7 @@ export function DataProvider({ children }) {
     setMatches,
     fetchTeams,
     fetchPlayers,
+    fetchMatches,
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

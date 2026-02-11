@@ -20,17 +20,13 @@ export default function PlayerRegistration() {
   const [playerPhoto, setPlayerPhoto] = React.useState(null);
   const [playerRole, setPlayerRole] = React.useState('Batsman');
   const [playerName, setPlayerName] = React.useState('');
-  const [jerseyName, setJerseyName] = React.useState('');
   const [dob, setDob] = React.useState('');
   const [battingStyle, setBattingStyle] = React.useState('Right-Hand');
   const [bowlingStyle, setBowlingStyle] = React.useState('');
-  const [jerseySize, setJerseySize] = React.useState('M');
   const [contactNumber, setContactNumber] = React.useState('');
-  const [email, setEmail] = React.useState('');
   const [flatWing, setFlatWing] = React.useState('A Wing');
   const [flatNumber, setFlatNumber] = React.useState('');
   const [previousTeam, setPreviousTeam] = React.useState('');
-  const [basePrice, setBasePrice] = React.useState('5000');
   const [loading, setLoading] = React.useState(false);
   const [success, setSuccess] = React.useState('');
   const [error, setError] = React.useState('');
@@ -95,18 +91,14 @@ export default function PlayerRegistration() {
 
       const playerData = {
         name: playerName,
-        jerseyName: jerseyName,
         dateOfBirth: dob,
         age: age,
         role: playerRole,
         battingStyle: battingStyle,
         bowlingStyle: bowlingStyle || 'N/A',
-        jerseySize: jerseySize,
         contactNumber: contactNumber,
-        email: email,
         address: address,
         previousTeam: previousTeam || 'None',
-        basePrice: parseInt(basePrice),
         ...(photoURL && { photo: photoURL })
       };
 
@@ -120,15 +112,12 @@ export default function PlayerRegistration() {
       
       // Reset form
       setPlayerName('');
-      setJerseyName('');
       setDob('');
       setBattingStyle('Right-Hand');
       setBowlingStyle('');
       setContactNumber('');
-      setEmail('');
       setFlatNumber('');
       setPreviousTeam('');
-      setBasePrice('5000');
       setPlayerPhoto(null);
       
       setTimeout(() => setSuccess(''), 5000);
@@ -157,11 +146,6 @@ export default function PlayerRegistration() {
       <FormControl>
         <FormLabel>Player Full Name</FormLabel>
         <TextField value={playerName} onChange={(e) => setPlayerName(e.target.value)} name="fullName" required fullWidth placeholder="Swapnil Shinde" />
-      </FormControl>
-
-      <FormControl>
-        <FormLabel>Jersey Name</FormLabel>
-        <TextField value={jerseyName} onChange={(e) => setJerseyName(e.target.value)} name="jerseyName" required fullWidth placeholder="SHINDE" />
       </FormControl>
 
       <FormControl fullWidth>
@@ -220,25 +204,8 @@ export default function PlayerRegistration() {
       )}
 
       <FormControl>
-        <FormLabel>Jersey Size</FormLabel>
-        <Select value={jerseySize} onChange={(e) => setJerseySize(e.target.value)} fullWidth>
-          <MenuItem value="S">S</MenuItem>
-          <MenuItem value="M">M</MenuItem>
-          <MenuItem value="L">L</MenuItem>
-          <MenuItem value="XL">XL</MenuItem>
-          <MenuItem value="XXL">XXL</MenuItem>
-          <MenuItem value="XXXL">XXXL</MenuItem>
-        </Select>
-      </FormControl>
-
-      <FormControl>
         <FormLabel>Contact Number</FormLabel>
         <TextField value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} name="contactNumber" required fullWidth placeholder="+91 9876543210" type="tel" />
-      </FormControl>
-
-      <FormControl>
-        <FormLabel>Email</FormLabel>
-        <TextField value={email} onChange={(e) => setEmail(e.target.value)} name="email" required fullWidth placeholder="player@example.com" type="email" />
       </FormControl>
 
       <FormControl>
@@ -257,7 +224,7 @@ export default function PlayerRegistration() {
             <ListSubheader key={`floor-${floorData.floor}`}>Floor {floorData.floor}</ListSubheader>,
             ...floorData.numbers.map((flat) => (
               <MenuItem key={flat} value={flat}>
-                {flatWing} {flat}
+                {flat}
               </MenuItem>
             )),
           ])}
@@ -267,11 +234,6 @@ export default function PlayerRegistration() {
       <FormControl>
         <FormLabel>Previous Team (Optional)</FormLabel>
         <TextField value={previousTeam} onChange={(e) => setPreviousTeam(e.target.value)} name="previousTeam" fullWidth placeholder="Team Name" />
-      </FormControl>
-
-      <FormControl>
-        <FormLabel>Base Price (₹)</FormLabel>
-        <TextField value={basePrice} onChange={(e) => setBasePrice(e.target.value)} name="basePrice" required fullWidth placeholder="5000" type="number" />
       </FormControl>
 
       <Button 

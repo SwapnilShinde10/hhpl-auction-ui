@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, TextField, IconButton } from '@mui/material';
+import { Box, TextField, IconButton, Avatar } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
@@ -23,16 +23,34 @@ export default function RegisteredTeamsList() {
 
   const filteredTeams = teamsWithPlayerCount.filter((team) =>
     team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    team.logo.toLowerCase().includes(searchQuery.toLowerCase())
+    (team.ownerName && team.ownerName.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const columns = [
     { field: 'name', headerName: 'Team Name', flex: 1, minWidth: 200 },
-    { field: 'logo', headerName: 'Logo', width: 100 },
-    { field: 'playerCount', headerName: 'Player Count', width: 130 },
-    { field: 'squadSize', headerName: 'Squad Size', width: 130 },
     { 
-      field: 'remainingPoints', 
+      field: 'logo', 
+      headerName: 'Logo', 
+      width: 80,
+      sortable: false,
+      renderCell: (params) => (
+        <Avatar 
+          src={params.value || undefined} 
+          sx={{ width: 40, height: 40, bgcolor: '#e3f2fd' }}
+        >
+          {!params.value && params.row.name?.charAt(0).toUpperCase()}
+        </Avatar>
+      )
+    },
+    { field: 'playerCount', headerName: 'Player Count', width: 130 },
+    { 
+      field: 'players', 
+      headerName: 'Squad Size', 
+      width: 130,
+      valueGetter: (params) => params?.length || 0
+    },
+    { 
+      field: 'remainingBudget', 
       headerName: 'Remaining Points', 
       width: 150,
       valueFormatter: (params) => {

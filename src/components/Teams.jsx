@@ -66,10 +66,11 @@ export default function Teams() {
                   {/* Team Logo */}
                   <Box display="flex" justifyContent="center" mb={2}>
                     <Avatar
+                      src={team.logo || undefined}
                       sx={{
                         width: 100,
                         height: 100,
-                        background: team.color,
+                        background: team.logo ? 'transparent' : defaultColors[teams.indexOf(team) % defaultColors.length],
                         fontSize: 32,
                         fontWeight: 900,
                         color: '#fff',
@@ -77,7 +78,7 @@ export default function Teams() {
                         border: '3px solid #fff',
                       }}
                     >
-                      {team.logo}
+                      {!team.logo && team.name?.charAt(0).toUpperCase()}
                     </Avatar>
                   </Box>
 
@@ -124,7 +125,7 @@ export default function Teams() {
                         mt: 0.5,
                       }}
                     >
-                      ₹{(team.remainingPoints / 1000000).toFixed(2)}M
+                      ₹{((team.remainingBudget || 0) / 1000000).toFixed(2)}M
                     </Typography>
                   </Box>
 
@@ -134,7 +135,7 @@ export default function Teams() {
                       Squad Size
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: 800, color: '#1976d2' }}>
-                      {team.squadSize} Players
+                      {(team.players?.length || 0)} Players
                     </Typography>
                   </Box>
                 </CardContent>
