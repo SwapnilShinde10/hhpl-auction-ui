@@ -9,8 +9,11 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
+import Alert from '@mui/material/Alert';
+import CircularProgress from '@mui/material/CircularProgress';
 import { styled } from '@mui/material/styles';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { ownerLogin, adminLogin, storeAuthData } from '../services/authService';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -38,24 +41,43 @@ const PageContainer = styled(Stack)(({ theme }) => ({
 
 export default function Login() {
   const navigate = useNavigate();
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState('');
+  const [success, setSuccess] = React.useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setSuccess('');
+    setLoading(true);
+
     const data = new FormData(e.currentTarget);
     const email = data.get('email');
     const password = data.get('password');
 
-    // hard-coded admin credentials
+    // hard-coded admin credentials check
     const ADMIN_EMAIL = 'admin1997@gmail.com';
     const ADMIN_PASS = 'C@d1ng1997';
 
-    if (email === ADMIN_EMAIL && password === ADMIN_PASS) {
-      navigate('/admin');
-      return;
+    try {
+      if (email === ADMIN_EMAIL && password === ADMIN_PASS) {
+        // Admin login
+        const response = await adminLogin(email, password);
+        storeAuthData(response.token, 'admin', response.admin);
+        setSuccess('Admin login successful!');
+        setTimeout(() => navigate('/admin'), 1000);
+      } else {
+        // Owner login via API
+        const response = await ownerLogin(email, password);
+        storeAuthData(response.token, 'owner', response.owner);
+        setSuccess('Login successful!');
+        setTimeout(() => navigate('/team-dashboard'), 1000);
+      }
+    } catch (err) {
+      setError(err.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
     }
-
-    // otherwise treat as owner login
-    navigate('/team-dashboard');
   };
 
   return (
@@ -77,6 +99,18 @@ export default function Login() {
             onSubmit={handleSubmit}
             sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
           >
+            {error && (
+              <Alert severity="error" onClose={() => setError('')}>
+                {error}
+              </Alert>
+            )}
+            
+            {success && (
+              <Alert severity="success" onClose={() => setSuccess('')}>
+                {success}
+              </Alert>
+            )}
+
             <FormControl>
               <FormLabel>Email</FormLabel>
               <TextField
@@ -85,6 +119,7 @@ export default function Login() {
                 required
                 fullWidth
                 placeholder="your@email.com"
+                disabled={loading}
               />
             </FormControl>
 
@@ -96,6 +131,7 @@ export default function Login() {
                 required
                 fullWidth
                 placeholder="••••••••"
+                disabled={loading}
               />
             </FormControl>
 
@@ -104,6 +140,7 @@ export default function Login() {
               fullWidth
               size="large"
               variant="contained"
+              disabled={loading}
               sx={{
                 mt: 1,
                 py: 1.2,
@@ -111,7 +148,7 @@ export default function Login() {
                 background: 'linear-gradient(90deg, #1976d2, #42a5f5)',
               }}
             >
-              Sign In
+              {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
             </Button>
           </Box>
 

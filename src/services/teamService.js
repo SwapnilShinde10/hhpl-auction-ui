@@ -69,3 +69,14 @@ export const getTeamPlayers = async (teamId) => {
     method: 'GET',
   });
 };
+
+/**
+ * Get owner's team by email
+ * @param {string} email - Owner email
+ * @returns {Promise<Object>} Team data with players
+ */
+export const getOwnerTeam = async (email) => {
+  return await apiCall(`/teams/owner/${encodeURIComponent(email)}`, {
+    method: 'GET',
+  });
+};

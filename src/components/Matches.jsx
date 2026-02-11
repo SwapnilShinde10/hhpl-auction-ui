@@ -189,28 +189,63 @@ export default function Matches() {
                       borderBottom: '3px solid #e0e0e0',
                     }}
                   >
-                    <Typography
-                      variant="h5"
-                      sx={{
-                        fontWeight: 900,
-                        color: '#1a237e',
-                        letterSpacing: 1,
-                        fontSize: { xs: '1.1rem', sm: '1.3rem', md: '1.5rem' },
-                      }}
-                    >
-                      HARSHAIL CRICKET LEAGUE
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: '#666',
-                        fontWeight: 600,
-                        mt: 0.5,
-                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                      }}
-                    >
-                      {match.matchNumber}
-                    </Typography>
+                    {match.status === 'completed' && match.winner ? (
+                      <>
+                        <Typography
+                          variant="h5"
+                          sx={{
+                            fontWeight: 900,
+                            color: '#4caf50',
+                            letterSpacing: 1,
+                            fontSize: { xs: '1.1rem', sm: '1.3rem', md: '1.5rem' },
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 1,
+                          }}
+                        >
+                          <EmojiEventsIcon sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' }, color: '#ffd700' }} />
+                          {match.winnerName || (match.winner === match.team1?.id ? match.team1.name : match.team2.name)}
+                          <EmojiEventsIcon sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' }, color: '#ffd700' }} />
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: '#4caf50',
+                            fontWeight: 600,
+                            mt: 0.5,
+                            fontSize: { xs: '0.7rem', sm: '0.8rem' },
+                          }}
+                        >
+                          WINNER
+                        </Typography>
+                      </>
+                    ) : (
+                      <>
+                        <Typography
+                          variant="h5"
+                          sx={{
+                            fontWeight: 900,
+                            color: '#ff9800',
+                            letterSpacing: 1,
+                            fontSize: { xs: '1.1rem', sm: '1.3rem', md: '1.5rem' },
+                          }}
+                        >
+                          UPCOMING MATCH
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: '#666',
+                            fontWeight: 600,
+                            mt: 0.5,
+                            fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                          }}
+                        >
+                          {match.matchNumber}
+                        </Typography>
+                      </>
+                    )}
                   </Box>
 
                   {/* Teams Section */}

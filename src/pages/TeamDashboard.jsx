@@ -10,24 +10,128 @@ import {
   Button,
   Divider,
   IconButton,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import SportsCricketIcon from '@mui/icons-material/SportsCricket';
 import SportsBaseballIcon from '@mui/icons-material/SportsBaseball';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import { useNavigate } from 'react-router-dom';
 import LogoutIcon from '@mui/icons-material/Logout';
-import { useData } from '../context/DataContext';
+import { getUserData, logout } from '../services/authService';
+import { getOwnerTeam } from '../services/teamService';
 
 export default function TeamDashboard() {
   const navigate = useNavigate();
+  const [teamData, setTeamData] = React.useState(null);
+  const [players, setPlayers] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState('');
 
-  const { teams, players } = useData();
-  const teamData = teams.find((t) => t.id === 1) || teams[0];
-  // show players belonging to this team for demo
-  const playingXI = players.filter((p) => p.team === teamData.name);
+  React.useEffect(() => {
+    const fetchOwnerTeam = async () => {
+      try {
+        setLoading(true);
+        setError('');
+
+        // Get logged-in user data
+        const userData = getUserData();
+        
+        if (!userData || !userData.email) {
+          setError('Please login first');
+          setTimeout(() => navigate('/'), 2000);
+          return;
+        }
+
+        // Fetch owner's team data
+        const response = await getOwnerTeam(userData.email);
+        
+        if (response.success) {
+          setTeamData(response.data);
+          setPlayers(response.data.players || []);
+        } else {
+          setError(response.message || 'Failed to load team data');
+        }
+      } catch (err) {
+        console.error('Error fetching team:', err);
+        setError(err.message || 'Failed to load team data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOwnerTeam();
+  }, [navigate]);
 
   const handleLogout = () => {
+    logout();
     navigate('/');
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <Box 
+        sx={{ 
+          minHeight: '100vh', 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center',
+          background: 'linear-gradient(180deg, #0a2342 0%, #1a3a52 50%, #0f2d42 100%)'
+        }}
+      >
+        <CircularProgress sx={{ color: '#fff' }} />
+      </Box>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <Box 
+        sx={{ 
+          minHeight: '100vh', 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center',
+          background: 'linear-gradient(180deg, #0a2342 0%, #1a3a52 50%, #0f2d42 100%)',
+          p: 3
+        }}
+      >
+        <Alert severity="error" sx={{ maxWidth: 500 }}>
+          {error}
+        </Alert>
+      </Box>
+    );
+  }
+
+  // No team data
+  if (!teamData) {
+    return (
+      <Box 
+        sx={{ 
+          minHeight: '100vh', 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center',
+          background: 'linear-gradient(180deg, #0a2342 0%, #1a3a52 50%, #0f2d42 100%)',
+          p: 3
+        }}
+      >
+        <Alert severity="warning" sx={{ maxWidth: 500 }}>
+          No team data found
+        </Alert>
+      </Box>
+    );
+  }
+
+  const getTeamInitials = (name) => {
+    return name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 3);
   };
 
   return (
@@ -37,7 +141,7 @@ export default function TeamDashboard() {
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Box>
             <Typography variant="h4" sx={{ fontWeight: 900, color: '#fff', mb: 0.5 }}>
-              {teamData.tournament}
+              Harshail Hornbill Cricket League
             </Typography>
             <Typography variant="body2" color="rgba(255,255,255,0.7)">
               Playing XI Selection
@@ -72,18 +176,34 @@ export default function TeamDashboard() {
           >
             {/* Team Logo */}
             <Box display="flex" justifyContent="center" mb={3}>
-              <Avatar
-                sx={{
-                  width: 120,
-                  height: 120,
-                  bgcolor: 'linear-gradient(90deg, #ffa500, #ff6b00)',
-                  fontSize: 48,
-                  fontWeight: 900,
-                  boxShadow: '0 8px 24px rgba(255, 165, 0, 0.3)',
-                }}
-              >
-                MW
-              </Avatar>
+              {teamData.logo ? (
+                <Avatar
+                  src={teamData.logo}
+                  alt={teamData.name}
+                  sx={{
+                    width: 120,
+                    height: 120,
+                    fontSize: 48,
+                    fontWeight: 900,
+                    boxShadow: '0 8px 24px rgba(255, 165, 0, 0.3)',
+                  }}
+                >
+                  {getTeamInitials(teamData.name)}
+                </Avatar>
+              ) : (
+                <Avatar
+                  sx={{
+                    width: 120,
+                    height: 120,
+                    bgcolor: 'linear-gradient(90deg, #ffa500, #ff6b00)',
+                    fontSize: 48,
+                    fontWeight: 900,
+                    boxShadow: '0 8px 24px rgba(255, 165, 0, 0.3)',
+                  }}
+                >
+                  {getTeamInitials(teamData.name)}
+                </Avatar>
+              )}
             </Box>
 
             {/* Team Name */}
@@ -118,7 +238,7 @@ export default function TeamDashboard() {
                 Squad Size
               </Typography>
               <Typography variant="h6" sx={{ fontWeight: 800, color: '#fff' }}>
-                {playingXI.length} Players
+                {players.length} Players
               </Typography>
             </Box>
           </Paper>
@@ -151,123 +271,141 @@ export default function TeamDashboard() {
             </Typography>
 
             {/* Player Grid */}
-            {/* Render players in explicit rows of 4 */}
-            {Array.from({ length: Math.ceil(playingXI.length / 4) }).map((_, rowIndex) => {
-              const start = rowIndex * 4;
-              const rowPlayers = playingXI.slice(start, start + 4);
-              return (
-                <Grid container spacing={2} justifyContent="center" key={`row-${rowIndex}`} sx={{ mb: 1 }}>
-                  {rowPlayers.map((player) => (
-                    <Grid item xs={12} sm={6} md={3} key={player.id}>
-                      <Card
-                        sx={{
-                          background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%)',
-                          backdropFilter: 'blur(10px)',
-                          border: '1px solid rgba(255,255,255,0.2)',
-                          borderRadius: 2,
-                          transition: 'all 0.3s ease',
-                          cursor: 'pointer',
-                          minHeight: 160,
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'space-between',
-                          '&:hover': {
-                            border: '1px solid rgba(255,255,255,0.4)',
-                            background: 'linear-gradient(135deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 100%)',
-                            transform: 'translateY(-4px)',
-                            boxShadow: '0 12px 24px rgba(0,0,0,0.3)',
-                          },
-                        }}
-                      >
-                        <CardContent sx={{ textAlign: 'center', p: 2 }}>
-                          <Avatar
+            {players.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 8 }}>
+                <Typography variant="h6" color="rgba(255,255,255,0.5)">
+                  No players yet
+                </Typography>
+                <Typography variant="body2" color="rgba(255,255,255,0.3)" sx={{ mt: 1 }}>
+                  Players will appear here after the auction
+                </Typography>
+              </Box>
+            ) : (
+              <>
+                {/* Render players in explicit rows of 4 */}
+                {Array.from({ length: Math.ceil(players.length / 4) }).map((_, rowIndex) => {
+                  const start = rowIndex * 4;
+                  const rowPlayers = players.slice(start, start + 4);
+                  return (
+                    <Grid container spacing={2} justifyContent="center" key={`row-${rowIndex}`} sx={{ mb: 1 }}>
+                      {rowPlayers.map((player) => (
+                        <Grid item xs={12} sm={6} md={3} key={player._id || player.id}>
+                          <Card
                             sx={{
-                              width: 70,
-                              height: 70,
-                              mx: 'auto',
-                              mb: 1,
-                              bgcolor: 'linear-gradient(90deg, #1976d2, #42a5f5)',
-                              fontSize: 24,
-                              fontWeight: 700,
-                              border: '2px solid rgba(255,255,255,0.3)',
+                              background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%)',
+                              backdropFilter: 'blur(10px)',
+                              border: '1px solid rgba(255,255,255,0.2)',
+                              borderRadius: 2,
+                              transition: 'all 0.3s ease',
+                              cursor: 'pointer',
+                              minHeight: 160,
+                              display: 'flex',
+                              flexDirection: 'column',
+                              justifyContent: 'space-between',
+                              '&:hover': {
+                                border: '1px solid rgba(255,255,255,0.4)',
+                                background: 'linear-gradient(135deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 100%)',
+                                transform: 'translateY(-4px)',
+                                boxShadow: '0 12px 24px rgba(0,0,0,0.3)',
+                              },
                             }}
                           >
-                            {player.name.split(' ')[0][0]}
-                          </Avatar>
+                            <CardContent sx={{ textAlign: 'center', p: 2 }}>
+                              {player.photo ? (
+                                <Avatar
+                                  src={player.photo}
+                                  alt={player.name}
+                                  sx={{
+                                    width: 70,
+                                    height: 70,
+                                    mx: 'auto',
+                                    mb: 1,
+                                    border: '2px solid rgba(255,255,255,0.3)',
+                                  }}
+                                />
+                              ) : (
+                                <Avatar
+                                  sx={{
+                                    width: 70,
+                                    height: 70,
+                                    mx: 'auto',
+                                    mb: 1,
+                                    bgcolor: 'linear-gradient(90deg, #1976d2, #42a5f5)',
+                                    fontSize: 24,
+                                    fontWeight: 700,
+                                    border: '2px solid rgba(255,255,255,0.3)',
+                                  }}
+                                >
+                                  {player.name.split(' ')[0][0]}
+                                </Avatar>
+                              )}
 
-                          <Typography
-                            sx={{
-                              fontWeight: 800,
-                              color: '#fff',
-                              fontSize: 13,
-                              mb: 1,
-                              wordBreak: 'break-word',
-                            }}
-                          >
-                            {player.name}
-                          </Typography>
+                              <Typography
+                                sx={{
+                                  fontWeight: 800,
+                                  color: '#fff',
+                                  fontSize: 13,
+                                  mb: 1,
+                                  wordBreak: 'break-word',
+                                }}
+                              >
+                                {player.name}
+                              </Typography>
 
-                          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
-                            <Typography
-                              variant="caption"
-                              sx={{
-                                background: 'linear-gradient(90deg, #ffa500, #ff6b00)',
-                                color: '#fff',
-                                px: 1,
-                                py: 0.5,
-                                borderRadius: 1,
-                                fontWeight: 700,
-                                display: 'inline-block',
-                              }}
-                            >
-                              {player.role}
-                            </Typography>
+                              <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, flexWrap: 'wrap' }}>
+                                <Typography
+                                  variant="caption"
+                                  sx={{
+                                    background: 'linear-gradient(90deg, #ffa500, #ff6b00)',
+                                    color: '#fff',
+                                    px: 1,
+                                    py: 0.5,
+                                    borderRadius: 1,
+                                    fontWeight: 700,
+                                    display: 'inline-block',
+                                  }}
+                                >
+                                  {player.role || 'Player'}
+                                </Typography>
 
-                            {/* Role-specific icons */}
-                            {player.role?.includes('All') || player.role?.includes('All-Rounder') ? (
-                              <>
-                                <IconButton size="small" sx={{ bgcolor: 'rgba(255,255,255,0.06)', color: '#fff', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
-                                  <SportsCricketIcon fontSize="small" />
-                                </IconButton>
-                                <IconButton size="small" sx={{ bgcolor: 'rgba(255,255,255,0.06)', color: '#fff', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
-                                  <SportsBaseballIcon fontSize="small" />
-                                </IconButton>
-                              </>
-                            ) : player.role?.includes('Wicket') || player.role?.includes('Wicket-Keeper') ? (
-                              <>
-                                <IconButton size="small" sx={{ bgcolor: 'rgba(255,255,255,0.06)', color: '#fff', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
-                                  <SportsCricketIcon fontSize="small" />
-                                </IconButton>
-                                <IconButton size="small" sx={{ bgcolor: 'rgba(255,255,255,0.06)', color: '#fff', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
-                                  <HowToRegIcon fontSize="small" />
-                                </IconButton>
-                              </>
-                            ) : player.role?.includes('Batsman') ? (
-                              <IconButton size="small" sx={{ bgcolor: 'rgba(255,255,255,0.06)', color: '#fff', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
-                                <SportsCricketIcon fontSize="small" />
-                              </IconButton>
-                            ) : player.role?.includes('Bowler') ? (
-                              <IconButton size="small" sx={{ bgcolor: 'rgba(255,255,255,0.06)', color: '#fff', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
-                                <SportsBaseballIcon fontSize="small" />
-                              </IconButton>
-                            ) : (
-                              <>
-                                <IconButton size="small" sx={{ bgcolor: 'rgba(255,255,255,0.06)', color: '#fff', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
-                                  <SportsCricketIcon fontSize="small" />
-                                </IconButton>
-                                <IconButton size="small" sx={{ bgcolor: 'rgba(255,255,255,0.06)', color: '#fff', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
-                                  <SportsBaseballIcon fontSize="small" />
-                                </IconButton>
-                              </>
-                            )}
-                          </Box>
-                        </CardContent>
-                      </Card>
+                                {/* Role-specific icons */}
+                                {player.role?.includes('All') || player.role?.includes('All-Rounder') ? (
+                                  <>
+                                    <IconButton size="small" sx={{ bgcolor: 'rgba(255,255,255,0.06)', color: '#fff', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
+                                      <SportsCricketIcon fontSize="small" />
+                                    </IconButton>
+                                    <IconButton size="small" sx={{ bgcolor: 'rgba(255,255,255,0.06)', color: '#fff', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
+                                      <SportsBaseballIcon fontSize="small" />
+                                    </IconButton>
+                                  </>
+                                ) : player.role?.includes('Wicket') || player.role?.includes('Wicket-Keeper') ? (
+                                  <>
+                                    <IconButton size="small" sx={{ bgcolor: 'rgba(255,255,255,0.06)', color: '#fff', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
+                                      <SportsCricketIcon fontSize="small" />
+                                    </IconButton>
+                                    <IconButton size="small" sx={{ bgcolor: 'rgba(255,255,255,0.06)', color: '#fff', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
+                                      <HowToRegIcon fontSize="small" />
+                                    </IconButton>
+                                  </>
+                                ) : player.role?.includes('Batsman') ? (
+                                  <IconButton size="small" sx={{ bgcolor: 'rgba(255,255,255,0.06)', color: '#fff', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
+                                    <SportsCricketIcon fontSize="small" />
+                                  </IconButton>
+                                ) : player.role?.includes('Bowler') ? (
+                                  <IconButton size="small" sx={{ bgcolor: 'rgba(255,255,255,0.06)', color: '#fff', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
+                                    <SportsBaseballIcon fontSize="small" />
+                                  </IconButton>
+                                ) : null}
+                              </Box>
+                            </CardContent>
+                          </Card>
+                        </Grid>
+                      ))}
                     </Grid>
-                  ))}
-                </Grid>
-              );
-            })}
+                  );
+                })}
+              </>
+            )}
           </Paper>
         </Box>
       </Box>
