@@ -24,7 +24,9 @@ export default function PointsTable() {
   // Calculate team statistics
   const teamStats = teams.map((team) => {
     const teamMatches = matches.filter(
-      (match) => match.team1Id === team.id || match.team2Id === team.id
+      (match) => 
+        (match.team1?.id === team.id || match.team1Id === team.id) || 
+        (match.team2?.id === team.id || match.team2Id === team.id)
     );
 
     const completedMatches = teamMatches.filter((match) => match.status === 'completed');
@@ -138,15 +140,17 @@ export default function PointsTable() {
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                       <Avatar
+                        src={team.logo || undefined}
                         sx={{
                           width: { xs: 32, sm: 40 },
                           height: { xs: 32, sm: 40 },
-                          bgcolor: '#1976d2',
+                          bgcolor: team.logo ? 'transparent' : '#1976d2',
                           fontWeight: 900,
                           fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                          border: '2px solid #e0e0e0',
                         }}
                       >
-                        {team.logo}
+                        {!team.logo && team.name?.charAt(0).toUpperCase()}
                       </Avatar>
                       <Typography
                         variant="body2"

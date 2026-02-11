@@ -18,7 +18,7 @@ export default function RegisteredTeamsList() {
   // Calculate player count for each team
   const teamsWithPlayerCount = teams.map((team) => ({
     ...team,
-    playerCount: players.filter((player) => player.team === team.name).length,
+    playerCount: players.filter((player) => player.soldTo === team.id).length,
   }));
 
   const filteredTeams = teamsWithPlayerCount.filter((team) =>

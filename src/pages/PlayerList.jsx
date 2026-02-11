@@ -38,15 +38,23 @@ export default function PlayerList() {
     setSelectedPlayer(null);
   };
 
-  const { players, teams } = useData();
+  const { players, teams = [] } = useData();
   const rows = players;
 
-  // Get unique teams from players
-  const uniqueTeams = [...new Set(players.map(p => p.team).filter(t => t && t !== '-'))];
+  // Get team name from soldTo ID
+  const getTeamName = (player) => {
+    if (!player.soldTo) return 'Not Sold';
+    const team = teams.find(t => t.id === player.soldTo);
+    return team ? team.name : 'Unknown Team';
+  };
+
+  // Get unique teams
+  const uniqueTeams = teams.map(t => ({ id: t.id, name: t.name }));
 
   const filteredRows = rows.filter((row) => {
     const matchesSearch = row.name.toLowerCase().includes(search.toLowerCase());
-    const matchesTeam = teamFilter === 'All' || row.team === teamFilter;
+    const rowTeamId = row.soldTo;
+    const matchesTeam = teamFilter === 'All' || rowTeamId === teamFilter;
     const matchesStatus = statusFilter === 'All' || row.status === statusFilter;
     return matchesSearch && matchesTeam && matchesStatus;
   });
@@ -83,7 +91,7 @@ export default function PlayerList() {
             >
               <MenuItem value="All">All Teams</MenuItem>
               {uniqueTeams.map((team) => (
-                <MenuItem key={team} value={team}>{team}</MenuItem>
+                <MenuItem key={team.id} value={team.id}>{team.name}</MenuItem>
               ))}
             </Select>
           </FormControl>
@@ -219,17 +227,17 @@ export default function PlayerList() {
                     >
                       <Box component="span" sx={{ opacity: 0.9 }}>Sold To: </Box>
                       <Box component="span" sx={{ fontWeight: 600 }}>
-                        {player.team || '-'}
+                        {getTeamName(player)}
                       </Box>
                     </Typography>
                   </Box>
 
                   <Box display="flex" justifyContent="space-between" alignItems="center">
                     <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                      Points:
+                      Sold Price:
                     </Typography>
                     <Typography variant="body2" fontWeight={700} fontSize={16}>
-                      {player.points}
+                      {player.soldPrice ? `₹${(player.soldPrice / 1000000).toFixed(2)}M` : '₹0'}
                     </Typography>
                   </Box>
                 </Box>

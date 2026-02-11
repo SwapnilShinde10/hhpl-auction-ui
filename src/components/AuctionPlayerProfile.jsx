@@ -15,57 +15,98 @@ import {
 } from '@mui/material';
 import { useData } from '../context/DataContext';
 import Confetti from 'react-confetti';
+import { sellPlayer, markPlayerAvailable } from '../services/auctionService';
 
 export default function AuctionPlayerProfile({ open, onClose, player }) {
-  const { teams, setPlayers } = useData();
+  const { teams, fetchPlayers, fetchTeams } = useData();
   const [status, setStatus] = React.useState('Available');
   const [price, setPrice] = React.useState('');
   const [selectedTeam, setSelectedTeam] = React.useState('');
   const [showConfetti, setShowConfetti] = React.useState(false);
   const [showSoldStamp, setShowSoldStamp] = React.useState(false);
   const [imageError, setImageError] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState('');
 
   React.useEffect(() => {
     if (player) {
-      setStatus('Available');
-      setPrice('');
-      setSelectedTeam('');
+      setStatus(player.status === 'sold' ? 'Sold' : 'Available');
+      setPrice(player.soldPrice ? String(player.soldPrice) : '');
+      setSelectedTeam(player.soldTo || '');
       setShowSoldStamp(false);
-      setImageError(false); // Reset image error state
+      setImageError(false);
+      setError('');
+      setLoading(false);
     }
   }, [player]);
 
-  const handleSave = () => {
-    if (status === 'Sold') {
-      setShowSoldStamp(true);
-      setShowConfetti(true);
+  const handleSave = async () => {
+    setError('');
+    setLoading(true);
 
-      // Update player data
-      setPlayers((prevPlayers) =>
-        prevPlayers.map((p) =>
-          p.id === player.id
-            ? { ...p, status: 'Sold', points: Number(price), team: selectedTeam }
-            : p
-        )
-      );
+    try {
+      if (status === 'Sold') {
+        // Validation
+        if (!price || Number(price) <= 0) {
+          setError('Please enter a valid price');
+          setLoading(false);
+          return;
+        }
 
-      // Stop confetti and close after 5 seconds
-      setTimeout(() => {
-        setShowConfetti(false);
+        if (!selectedTeam) {
+          setError('Please select a team');
+          setLoading(false);
+          return;
+        }
+
+        // Check team budget
+        const team = teams.find(t => t.id === selectedTeam);
+        if (!team) {
+          setError('Selected team not found');
+          setLoading(false);
+          return;
+        }
+
+        const remainingBudget = team.remainingBudget || team.totalBudget || 10000000;
+        const auctionPrice = Number(price);
+
+        if (remainingBudget < auctionPrice) {
+          setError(`Insufficient budget! Team has ₹${(remainingBudget / 1000000).toFixed(2)}M remaining, but player costs ₹${(auctionPrice / 1000000).toFixed(2)}M`);
+          setLoading(false);
+          return;
+        }
+
+        // Call API to sell player
+        await sellPlayer(player.id, selectedTeam, auctionPrice);
+
+        // Show celebration
+        setShowSoldStamp(true);
+        setShowConfetti(true);
+
+        // Refresh data
+        await Promise.all([fetchPlayers(), fetchTeams()]);
+
+        // Stop confetti and close after 5 seconds
         setTimeout(() => {
-          onClose();
-        }, 500);
-      }, 5000);
-    } else {
-      // Update player as Available
-      setPlayers((prevPlayers) =>
-        prevPlayers.map((p) =>
-          p.id === player.id
-            ? { ...p, status: 'Available', points: 0, team: '-' }
-            : p
-        )
-      );
-      onClose();
+          setShowConfetti(false);
+          setTimeout(() => {
+            onClose();
+          }, 500);
+        }, 5000);
+      } else {
+        // Mark player as available
+        await markPlayerAvailable(player.id);
+
+        // Refresh data
+        await Promise.all([fetchPlayers(), fetchTeams()]);
+        
+        onClose();
+      }
+    } catch (err) {
+      console.error('Error saving player:', err);
+      setError(err.message || 'Failed to save player. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -197,30 +238,50 @@ export default function AuctionPlayerProfile({ open, onClose, player }) {
                 <Box sx={{ borderBottom: '1px solid rgba(255,255,255,0.2)', pb: 1 }}>
                   <Typography variant="caption" sx={{ color: '#fbbf24', fontWeight: 700 }}>Age:</Typography>
                   <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                    {player.dob ? new Date().getFullYear() - new Date(player.dob).getFullYear() : 'N/A'}
+                    {player.age || (player.dateOfBirth ? new Date().getFullYear() - new Date(player.dateOfBirth).getFullYear() : 'N/A')}
                   </Typography>
                 </Box>
 
                 <Box sx={{ borderBottom: '1px solid rgba(255,255,255,0.2)', pb: 1 }}>
                   <Typography variant="caption" sx={{ color: '#fbbf24', fontWeight: 700 }}>Position:</Typography>
-                  <Typography variant="h6" sx={{ fontWeight: 600 }}>{player.role}</Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>{player.role || 'N/A'}</Typography>
                 </Box>
 
                 <Box sx={{ borderBottom: '1px solid rgba(255,255,255,0.2)', pb: 1 }}>
-                  <Typography variant="caption" sx={{ color: '#fbbf24', fontWeight: 700 }}>Flat Wing:</Typography>
-                  <Typography variant="h6" sx={{ fontWeight: 600 }}>{player.flatWing || 'N/A'}</Typography>
+                  <Typography variant="caption" sx={{ color: '#fbbf24', fontWeight: 700 }}>Bat/Bowl:</Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    {player.battingStyle || 'N/A'} / {player.bowlingStyle || 'N/A'}
+                  </Typography>
+                </Box>
+
+                <Box sx={{ borderBottom: '1px solid rgba(255,255,255,0.2)', pb: 1 }}>
+                  <Typography variant="caption" sx={{ color: '#fbbf24', fontWeight: 700 }}>Address:</Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>{player.address || 'N/A'}</Typography>
                 </Box>
 
                 <Box sx={{ borderBottom: '1px solid rgba(255,255,255,0.2)', pb: 1 }}>
                   <Typography variant="caption" sx={{ color: '#fbbf24', fontWeight: 700 }}>Current Team:</Typography>
-                  <Typography variant="h6" sx={{ fontWeight: 600 }}>{player.team || 'Not Sold'}</Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    {player.soldTo ? teams.find(t => t.id === player.soldTo)?.name || 'Unknown Team' : 'Not Sold'}
+                  </Typography>
                 </Box>
 
                 <Box sx={{ borderBottom: '1px solid rgba(255,255,255,0.2)', pb: 1 }}>
-                  <Typography variant="caption" sx={{ color: '#fbbf24', fontWeight: 700 }}>Points:</Typography>
-                  <Typography variant="h6" sx={{ fontWeight: 600 }}>{player.points || 0}</Typography>
+                  <Typography variant="caption" sx={{ color: '#fbbf24', fontWeight: 700 }}>Sold Price:</Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    {player.soldPrice ? `₹${(player.soldPrice / 1000000).toFixed(2)}M` : '₹0'}
+                  </Typography>
                 </Box>
               </Box>
+
+              {/* Error Message */}
+              {error && (
+                <Box sx={{ mb: 2, p: 2, bgcolor: 'rgba(239, 68, 68, 0.2)', borderRadius: 1, border: '1px solid #ef4444' }}>
+                  <Typography variant="body2" sx={{ color: '#fecaca', fontWeight: 600 }}>
+                    {error}
+                  </Typography>
+                </Box>
+              )}
 
               {/* Status Toggle Buttons */}
               <Box sx={{ mt: 4 }}>
@@ -282,10 +343,12 @@ export default function AuctionPlayerProfile({ open, onClose, player }) {
                   <Box sx={{ mb: 2 }}>
                     <TextField
                       fullWidth
-                      label="Auction Price"
+                      label="Auction Price (₹)"
                       type="number"
                       value={price}
                       onChange={(e) => setPrice(e.target.value)}
+                      placeholder="e.g., 2500000 for 2.5M"
+                      helperText="Enter amount in rupees (e.g., 2500000 = ₹2.5M)"
                       sx={{
                         mb: 2,
                         '& .MuiOutlinedInput-root': {
@@ -296,6 +359,7 @@ export default function AuctionPlayerProfile({ open, onClose, player }) {
                           '&.Mui-focused fieldset': { borderColor: '#60a5fa' },
                         },
                         '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.7)', fontWeight: 600 },
+                        '& .MuiFormHelperText-root': { color: 'rgba(255,255,255,0.6)' },
                       }}
                     />
 
@@ -314,8 +378,8 @@ export default function AuctionPlayerProfile({ open, onClose, player }) {
                         }}
                       >
                         {teams.map((team) => (
-                          <MenuItem key={team.id} value={team.name}>
-                            {team.name}
+                          <MenuItem key={team.id} value={team.id}>
+                            {team.name} - ₹{((team.remainingBudget || team.totalBudget || 0) / 1000000).toFixed(2)}M remaining
                           </MenuItem>
                         ))}
                       </Select>
@@ -328,6 +392,7 @@ export default function AuctionPlayerProfile({ open, onClose, player }) {
                     fullWidth
                     variant="contained"
                     onClick={handleSave}
+                    disabled={loading}
                     sx={{
                       py: 1.2,
                       fontSize: '0.95rem',
@@ -342,14 +407,19 @@ export default function AuctionPlayerProfile({ open, onClose, player }) {
                         bgcolor: '#059669',
                         boxShadow: '0 4px 20px rgba(16, 185, 129, 0.5)',
                       },
+                      '&:disabled': {
+                        bgcolor: 'rgba(16, 185, 129, 0.3)',
+                        color: 'rgba(255,255,255,0.5)',
+                      },
                     }}
                   >
-                    SAVE
+                    {loading ? 'SAVING...' : 'SAVE'}
                   </Button>
                   <Button
                     fullWidth
                     variant="outlined"
                     onClick={onClose}
+                    disabled={loading}
                     sx={{
                       py: 1.2,
                       fontSize: '0.95rem',

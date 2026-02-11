@@ -45,3 +45,41 @@ export const getAuctionHistory = async () => {
     method: 'GET',
   });
 };
+
+/**
+ * Sell a player to a team
+ * @param {string} playerId - Player ID
+ * @param {string} teamId - Team ID
+ * @param {number} price - Auction price
+ * @returns {Promise<Object>} Updated player and team data
+ */
+export const sellPlayer = async (playerId, teamId, price) => {
+  try {
+    const response = await apiCall('/players/sell', {
+      method: 'POST',
+      body: JSON.stringify({ playerId, teamId, price }),
+    });
+    return response;
+  } catch (error) {
+    console.error('Error selling player:', error);
+    throw error;
+  }
+};
+
+/**
+ * Mark player as available (unsold)
+ * @param {string} playerId - Player ID
+ * @returns {Promise<Object>} Updated player data
+ */
+export const markPlayerAvailable = async (playerId) => {
+  try {
+    const response = await apiCall('/players/mark-available', {
+      method: 'POST',
+      body: JSON.stringify({ playerId }),
+    });
+    return response;
+  } catch (error) {
+    console.error('Error marking player as available:', error);
+    throw error;
+  }
+};
