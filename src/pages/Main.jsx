@@ -2,7 +2,6 @@ import * as React from 'react';
 import { Box, Tabs, Tab, Paper, Typography, Divider, Stack, IconButton, Modal, Backdrop } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PlayerList from './PlayerList';
-import RegisteredPlayers from './RegisteredPlayers';
 import TeamRegistration from './TeamRegistration';
 import Login from './Login';
 import PointsTable from './PointsTable';
@@ -143,7 +142,6 @@ export default function Main() {
             }}
           >
             <Tab label="Home" />
-            <Tab label="Registered Players" />
             <Tab label="Teams" />
             <Tab label="Matches" />
             <Tab label="Points Table" />
@@ -164,28 +162,24 @@ export default function Main() {
       </TabPanel>
 
       <TabPanel value={tab} index={1}>
-        <RegisteredPlayers />
-      </TabPanel>
-
-      <TabPanel value={tab} index={2}>
         <Teams />
       </TabPanel>
 
-      <TabPanel value={tab} index={3}>
+      <TabPanel value={tab} index={2}>
         <Matches />
       </TabPanel>
 
-      <TabPanel value={tab} index={4}>
+      <TabPanel value={tab} index={3}>
         <PointsTable />
       </TabPanel>
 
-      <TabPanel value={tab} index={5}>
+      <TabPanel value={tab} index={4}>
         <Box sx={{ px: { xs: 2, md: 4 }, py: 3 }}>
           <TeamRegistration />
         </Box>
       </TabPanel>
 
-      <TabPanel value={tab} index={6}>
+      <TabPanel value={tab} index={5}>
         <Box sx={{ px: { xs: 2, md: 4 }, py: 3, display: 'flex', justifyContent: 'center' }}>
           <Login />
         </Box>

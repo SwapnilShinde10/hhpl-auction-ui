@@ -1,159 +1,115 @@
 import * as React from 'react';
-import { Box, Tabs, Tab, Paper, Typography, Divider, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Alert, CircularProgress } from '@mui/material';
-import { DataGrid } from '@mui/x-data-grid';
-import { useData } from '../context/DataContext';
-import DeleteIcon from '@mui/icons-material/Delete';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import ImageIcon from '@mui/icons-material/Image';
-import PlayerProfile from '../components/PlayerProfile';
-import { fixBrokenPlayerPhotos } from '../utils/fixPlayerPhotos';
+import { Box, Paper, Typography, Button, AppBar, Toolbar, Chip } from '@mui/material';
+import LogoutIcon from '@mui/icons-material/Logout';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import { useNavigate } from 'react-router-dom';
+import { logout, getUserData } from '../services/authService';
+import RegisteredPlayers from './RegisteredPlayers';
 
 export default function Admin() {
-  const { players, deletePlayer, teams, deductPoints } = useData();
-  const [tab, setTab] = React.useState(0);
-  const [deductValues, setDeductValues] = React.useState({});
-  const [confirmOpen, setConfirmOpen] = React.useState(false);
-  const [toDelete, setToDelete] = React.useState(null);
-  const [profileOpen, setProfileOpen] = React.useState(false);
-  const [selectedPlayer, setSelectedPlayer] = React.useState(null);
-  const [fixing, setFixing] = React.useState(false);
-  const [fixResult, setFixResult] = React.useState(null);
+  const navigate = useNavigate();
+  const [adminEmail, setAdminEmail] = React.useState('');
 
-  const handleViewProfile = (player) => {
-    setSelectedPlayer(player);
-    setProfileOpen(true);
-  };
-
-  const handleCloseProfile = () => {
-    setProfileOpen(false);
-    setSelectedPlayer(null);
-  };
-
-  const handleDelete = (id) => {
-    setToDelete(id);
-    setConfirmOpen(true);
-  };
-
-  const confirmDelete = () => {
-    deletePlayer(toDelete);
-    setConfirmOpen(false);
-    setToDelete(null);
-  };
-
-  const handleDeduct = (teamId) => {
-    const raw = deductValues[teamId];
-    const value = Number(raw);
-    if (!raw || Number.isNaN(value) || value <= 0) return;
-    deductPoints(teamId, value);
-    setDeductValues((s) => ({ ...s, [teamId]: '' }));
-  };
-
-  const handleFixPhotos = async () => {
-    setFixing(true);
-    setFixResult(null);
-    try {
-      const results = await fixBrokenPlayerPhotos();
-      setFixResult({ success: true, results });
-      window.location.reload(); // Reload to fetch updated data
-    } catch (error) {
-      setFixResult({ success: false, error: error.message });
-    } finally {
-      setFixing(false);
+  React.useEffect(() => {
+    // Check if user is admin
+    const userRole = localStorage.getItem('userRole');
+    const userData = getUserData();
+    
+    if (userRole !== 'admin') {
+      // Redirect to login if not admin
+      navigate('/');
+      return;
     }
-  };
+    
+    setAdminEmail(userData?.email || 'Admin');
+  }, [navigate]);
 
-  const columns = [
-    { field: 'id', headerName: 'ID', width: 70 },
-    { field: 'fullName', headerName: 'Full Name', flex: 1 },
-    { field: 'role', headerName: 'Role', width: 140 },
-    { field: 'team', headerName: 'Team', width: 180 },
-    { field: 'points', headerName: 'Points', width: 110 },
-    {
-      field: 'actions', headerName: 'Actions', width: 150, sortable: false, renderCell: (params) => (
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <IconButton color="primary" onClick={() => handleViewProfile(params.row)} title="View Profile">
-            <VisibilityIcon />
-          </IconButton>
-          <IconButton color="error" onClick={() => handleDelete(params.row.id)} title="Delete">
-            <DeleteIcon />
-          </IconButton>
-        </Box>
-      )
-    }
-  ];
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Paper sx={{ p: 2, mb: 2 }}>
-        <Tabs value={tab} onChange={(e, v) => setTab(v)}>
-          <Tab label="Players" />
-          <Tab label="Teams" />
-        </Tabs>
-      </Paper>
-
-      {tab === 0 && (
-        <Paper sx={{ p: 2 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h6">All Players</Typography>
-            <Button
-              variant="outlined"
-              startIcon={fixing ? <CircularProgress size={20} /> : <ImageIcon />}
-              onClick={handleFixPhotos}
-              disabled={fixing}
-            >
-              Fix Broken Photos
-            </Button>
+    <Box sx={{ minHeight: '100vh', background: 'linear-gradient(180deg,#f3f8ff,#ffffff)' }}>
+      {/* Admin Header */}
+      <AppBar 
+        position="sticky" 
+        elevation={2}
+        sx={{ 
+          background: 'linear-gradient(90deg, #1976d2, #42a5f5)',
+        }}
+      >
+        <Toolbar sx={{ justifyContent: 'space-between', py: 1 }}>
+          <Box display="flex" alignItems="center" gap={2}>
+            <Box
+              component="img"
+              src="/Logo/Logo.jpeg"
+              alt="HHPL Logo"
+              sx={{
+                width: { xs: 50, sm: 60 },
+                height: { xs: 50, sm: 60 },
+                objectFit: 'contain',
+                borderRadius: 2,
+              }}
+            />
+            <Box>
+              <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
+                <Typography 
+                  variant="h5" 
+                  sx={{ 
+                    fontWeight: 900, 
+                    color: '#fff',
+                    fontSize: { xs: '1.2rem', sm: '1.5rem' }
+                  }}
+                >
+                  Admin Dashboard
+                </Typography>
+                <Chip 
+                  icon={<AdminPanelSettingsIcon />}
+                  label="ADMIN" 
+                  size="small"
+                  sx={{ 
+                    bgcolor: '#4caf50', 
+                    color: '#fff',
+                    fontWeight: 700
+                  }} 
+                />
+              </Box>
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: 'rgba(255,255,255,0.9)',
+                  fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                }}
+              >
+                {adminEmail}
+              </Typography>
+            </Box>
           </Box>
           
-          {fixResult && (
-            <Alert severity={fixResult.success ? 'success' : 'error'} sx={{ mb: 2 }} onClose={() => setFixResult(null)}>
-              {fixResult.success 
-                ? `Successfully updated ${fixResult.results.length} player(s)` 
-                : `Error: ${fixResult.error}`}
-            </Alert>
-          )}
-          
-          <div style={{ height: 480, width: '100%' }}>
-            <DataGrid rows={players} columns={columns} pageSizeOptions={[5, 10]} disableRowSelectionOnClick />
-          </div>
-        </Paper>
-      )}
+          <Button
+            variant="contained"
+            startIcon={<LogoutIcon />}
+            onClick={handleLogout}
+            sx={{
+              bgcolor: 'rgba(255,255,255,0.2)',
+              color: '#fff',
+              fontWeight: 700,
+              '&:hover': {
+                bgcolor: 'rgba(255,255,255,0.3)',
+              },
+              fontSize: { xs: '0.75rem', sm: '0.875rem' },
+              px: { xs: 2, sm: 3 }
+            }}
+          >
+            Logout
+          </Button>
+        </Toolbar>
+      </AppBar>
 
-      {tab === 1 && (
-        <Paper sx={{ p: 2 }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>Teams</Typography>
-          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-            {teams.map((team) => (
-              <Paper key={team.id} sx={{ p: 2, width: 260 }}>
-                <Typography variant="h6">{team.name}</Typography>
-                <Typography variant="body2" color="text.secondary">Remaining Points: ₹{(team.remainingBudget || 0).toLocaleString('en-IN')}</Typography>
-                <Typography variant="body2" color="text.secondary">Squad: {team.players?.length || 0}</Typography>
-
-                <Box sx={{ mt: 1, display: 'flex', gap: 1, alignItems: 'center' }}>
-                  <TextField
-                    size="small"
-                    label="Deduct (points)"
-                    value={deductValues[team.id] ?? ''}
-                    onChange={(e) => setDeductValues((s) => ({ ...s, [team.id]: e.target.value }))}
-                  />
-                  <Button variant="contained" onClick={() => handleDeduct(team.id)}>Deduct</Button>
-                </Box>
-              </Paper>
-            ))}
-          </Box>
-        </Paper>
-      )}
-
-      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>Are you sure you want to delete this player?</DialogContent>
-
-      <PlayerProfile open={profileOpen} onClose={handleCloseProfile} player={selectedPlayer} />
-        <DialogActions>
-          <Button onClick={() => setConfirmOpen(false)}>Cancel</Button>
-          <Button color="error" onClick={confirmDelete}>Delete</Button>
-        </DialogActions>
-      </Dialog>
+      {/* Main Content */}
+      <RegisteredPlayers />
     </Box>
   );
 }
+

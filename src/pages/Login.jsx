@@ -13,7 +13,7 @@ import Alert from '@mui/material/Alert';
 import CircularProgress from '@mui/material/CircularProgress';
 import { styled } from '@mui/material/styles';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import { ownerLogin, adminLogin, storeAuthData } from '../services/authService';
+import { ownerLogin, storeAuthData } from '../services/authService';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -55,17 +55,26 @@ export default function Login() {
     const email = data.get('email');
     const password = data.get('password');
 
-    // hard-coded admin credentials check
-    const ADMIN_EMAIL = 'admin1997@gmail.com';
-    const ADMIN_PASS = 'C@d1ng1997';
+    // Hardcoded admin credentials
+    const ADMIN_ACCOUNTS = [
+      { email: 'webhosting2212@gmail.com', password: 'C@d1ng1997' },
+      { email: 'harshailhornbill@gmail.com', password: 'C@d1ng1997' },
+      { email: 'admin1997@gmail.com', password: 'C@d1ng1997' }
+    ];
 
     try {
-      if (email === ADMIN_EMAIL && password === ADMIN_PASS) {
-        // Admin login
-        const response = await adminLogin(email, password);
-        storeAuthData(response.token, 'admin', response.admin);
+      // Check if credentials match any admin account
+      const isAdmin = ADMIN_ACCOUNTS.some(
+        admin => admin.email === email && admin.password === password
+      );
+
+      if (isAdmin) {
+        // Admin login - store admin role and redirect to admin page
+        storeAuthData('admin-token-' + Date.now(), 'admin', { email, role: 'admin' });
         setSuccess('Admin login successful!');
-        setTimeout(() => navigate('/admin'), 1000);
+        setTimeout(() => {
+          window.location.href = '/admin'; // Redirect to admin dashboard
+        }, 1000);
       } else {
         // Owner login via API
         const response = await ownerLogin(email, password);
@@ -87,10 +96,10 @@ export default function Login() {
         <Card>
           <Box textAlign="center">
             <Typography variant="h4" fontWeight={700} gutterBottom>
-              Owner Login
+              Login
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Sign in to manage your team
+              Sign in to access your account
             </Typography>
           </Box>
 
