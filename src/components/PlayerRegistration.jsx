@@ -11,9 +11,14 @@ import MenuItem from '@mui/material/MenuItem';
 import ListSubheader from '@mui/material/ListSubheader';
 import Alert from '@mui/material/Alert';
 import CircularProgress from '@mui/material/CircularProgress';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import Typography from '@mui/material/Typography';
 import { registerPlayer } from '../services/playerService';
 import { uploadPlayerPhoto } from '../services/uploadService';
 import { useData } from '../context/DataContext';
+import paymentBarcode from '../../Logo/Barcode.jpeg';
 
 export default function PlayerRegistration() {
   const { fetchPlayers } = useData();
@@ -26,10 +31,11 @@ export default function PlayerRegistration() {
   const [contactNumber, setContactNumber] = React.useState('');
   const [flatWing, setFlatWing] = React.useState('A Wing');
   const [flatNumber, setFlatNumber] = React.useState('');
-  const [previousTeam, setPreviousTeam] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [success, setSuccess] = React.useState('');
   const [error, setError] = React.useState('');
+  const [paymentDialogOpen, setPaymentDialogOpen] = React.useState(false);
+  const [paymentStepCompleted, setPaymentStepCompleted] = React.useState(false);
 
   const calculateAge = (dateOfBirth) => {
     const today = new Date();
@@ -66,6 +72,17 @@ export default function PlayerRegistration() {
 
   const handlePlayerSubmit = async (e) => {
     e.preventDefault();
+
+    if (!playerPhoto) {
+      setError('Player photo is mandatory. Please upload a photo before registering.');
+      return;
+    }
+
+    if (!paymentStepCompleted) {
+      setError('Payment step is mandatory. Please open the payment scanner and close it before registering.');
+      return;
+    }
+
     setLoading(true);
     setError('');
     setSuccess('');
@@ -98,7 +115,7 @@ export default function PlayerRegistration() {
         bowlingStyle: bowlingStyle || 'N/A',
         contactNumber: contactNumber,
         address: address,
-        previousTeam: previousTeam || 'None',
+        previousTeam: 'None',
         ...(photoURL && { photo: photoURL })
       };
 
@@ -117,8 +134,8 @@ export default function PlayerRegistration() {
       setBowlingStyle('');
       setContactNumber('');
       setFlatNumber('');
-      setPreviousTeam('');
       setPlayerPhoto(null);
+      setPaymentStepCompleted(false);
       
       setTimeout(() => setSuccess(''), 5000);
     } catch (err) {
@@ -127,6 +144,16 @@ export default function PlayerRegistration() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const openPaymentDialog = () => {
+    setError('');
+    setPaymentDialogOpen(true);
+  };
+
+  const closePaymentDialog = () => {
+    setPaymentDialogOpen(false);
+    setPaymentStepCompleted(true);
   };
 
   return (
@@ -232,8 +259,10 @@ export default function PlayerRegistration() {
       </FormControl>
 
       <FormControl>
-        <FormLabel>Previous Team (Optional)</FormLabel>
-        <TextField value={previousTeam} onChange={(e) => setPreviousTeam(e.target.value)} name="previousTeam" fullWidth placeholder="Team Name" />
+        <FormLabel>Payment Link (Registration Charges: ₹1,000)</FormLabel>
+        <Button variant="outlined" onClick={openPaymentDialog} fullWidth>
+          Open Google Scanner
+        </Button>
       </FormControl>
 
       <Button 
@@ -241,11 +270,26 @@ export default function PlayerRegistration() {
         fullWidth 
         size="large" 
         variant="contained" 
-        disabled={loading}
+        disabled={loading || !paymentStepCompleted}
         sx={{ mt: 1, py: 1.2, borderRadius: 2, background: 'linear-gradient(90deg, #1976d2, #42a5f5)' }}
       >
         {loading ? <CircularProgress size={24} color="inherit" /> : 'Add Player'}
       </Button>
+
+      <Dialog open={paymentDialogOpen} onClose={closePaymentDialog} maxWidth="xs" fullWidth>
+        <DialogTitle>Scan and Pay</DialogTitle>
+        <DialogContent>
+          <Box
+            component="img"
+            src={paymentBarcode}
+            alt="Google Scanner Barcode"
+            sx={{ width: '100%', borderRadius: 1 }}
+          />
+          <Typography variant="body2" sx={{ mt: 1 }}>
+            After scanning payment, close this popup to continue registration.
+          </Typography>
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 }

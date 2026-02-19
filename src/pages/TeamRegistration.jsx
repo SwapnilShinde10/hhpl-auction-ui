@@ -17,12 +17,16 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import Alert from '@mui/material/Alert';
 import CircularProgress from '@mui/material/CircularProgress';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
 import { styled } from '@mui/material/styles';
 import { Link as RouterLink } from 'react-router-dom';
 import PlayerRegistration from '../components/PlayerRegistration';
 import { registerTeam } from '../services/teamService';
 import { uploadTeamLogo } from '../services/uploadService';
 import { useData } from '../context/DataContext';
+import paymentBarcode from '../../Logo/Barcode.jpeg';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -63,9 +67,17 @@ export default function TeamRegistration() {
   const [ownerName, setOwnerName] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [paymentDialogOpen, setPaymentDialogOpen] = React.useState(false);
+  const [paymentStepCompleted, setPaymentStepCompleted] = React.useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!paymentStepCompleted) {
+      setError('Payment step is mandatory. Please open the payment scanner and close it before registering.');
+      return;
+    }
+
     setLoading(true);
     setError('');
     setSuccess('');
@@ -109,6 +121,7 @@ export default function TeamRegistration() {
       setEmail('');
       setPassword('');
       setLogo(null);
+      setPaymentStepCompleted(false);
       
       setTimeout(() => setSuccess(''), 5000);
     } catch (err) {
@@ -117,6 +130,16 @@ export default function TeamRegistration() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const openPaymentDialog = () => {
+    setError('');
+    setPaymentDialogOpen(true);
+  };
+
+  const closePaymentDialog = () => {
+    setPaymentDialogOpen(false);
+    setPaymentStepCompleted(true);
   };
 
   const handleTabChange = (e, value) => setTab(value);
@@ -216,17 +239,39 @@ export default function TeamRegistration() {
                   <TextField value={password} onChange={(e) => setPassword(e.target.value)} name="password" type="password" required fullWidth />
                 </FormControl>
 
+                <FormControl>
+                  <FormLabel>Payment Link (Registration Charges: ₹3,500)</FormLabel>
+                  <Button variant="outlined" onClick={openPaymentDialog} fullWidth>
+                    Open Google Scanner
+                  </Button>
+                </FormControl>
+
                 <Button 
                   type="submit" 
                   fullWidth 
                   size="large" 
                   variant="contained" 
-                  disabled={loading}
+                  disabled={loading || !paymentStepCompleted}
                   sx={{ mt: 1, py: 1.2, borderRadius: 2, background: 'linear-gradient(90deg, #1976d2, #42a5f5)' }}
                 >
                   {loading ? <CircularProgress size={24} color="inherit" /> : 'Register Team'}
                 </Button>
               </Box>
+
+              <Dialog open={paymentDialogOpen} onClose={closePaymentDialog} maxWidth="xs" fullWidth>
+                <DialogTitle>Scan and Pay</DialogTitle>
+                <DialogContent>
+                  <Box
+                    component="img"
+                    src={paymentBarcode}
+                    alt="Google Scanner Barcode"
+                    sx={{ width: '100%', borderRadius: 1 }}
+                  />
+                  <Typography variant="body2" sx={{ mt: 1 }}>
+                    After scanning payment, close this popup to continue registration.
+                  </Typography>
+                </DialogContent>
+              </Dialog>
 
               <Divider sx={{ my: 1 }} />
 
