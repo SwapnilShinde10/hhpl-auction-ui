@@ -240,7 +240,7 @@ export default function TeamRegistration() {
                 </FormControl>
 
                 <FormControl>
-                  <FormLabel>Payment Link (Registration Charges: ₹3,500)</FormLabel>
+                  <FormLabel>Payment Link (Registration Charges: ₹3,000)</FormLabel>
                   <Button variant="outlined" onClick={openPaymentDialog} fullWidth>
                     Open Google Scanner
                   </Button>

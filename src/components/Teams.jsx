@@ -45,7 +45,7 @@ export default function Teams() {
             <Grid item xs={12} sm={6} md={6} lg={4} xl={4} key={team.id} sx={{ display: 'flex', justifyContent: 'center' }}>
               <Card
                 sx={{
-                  height: '400px',
+                  height: '430px',
                   width: '300px',
                   display: 'flex',
                   flexDirection: 'column',
@@ -85,8 +85,9 @@ export default function Teams() {
                   {/* Team Name */}
                   <Box
                     sx={{
-                      minHeight: '56px',
+                      minHeight: '82px',
                       display: 'flex',
+                      flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
                       mb: 1,
@@ -105,6 +106,13 @@ export default function Teams() {
                       }}
                     >
                       {team.name}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mt: 0.5, fontWeight: 600 }}
+                    >
+                      Owner: {team.ownerName || 'N/A'}
                     </Typography>
                   </Box>
 

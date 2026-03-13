@@ -259,7 +259,7 @@ export default function PlayerRegistration() {
       </FormControl>
 
       <FormControl>
-        <FormLabel>Payment Link (Registration Charges: ₹1,000)</FormLabel>
+        <FormLabel>Payment Link (Registration Charges: ₹599)</FormLabel>
         <Button variant="outlined" onClick={openPaymentDialog} fullWidth>
           Open Google Scanner
         </Button>
